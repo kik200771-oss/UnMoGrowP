@@ -57,11 +57,45 @@ start: start-infra
 	@echo "   Frontend: http://localhost:5173"
 	@echo "   API:      http://localhost:3001"
 
-# Start infrastructure
+# Start infrastructure (default: ClickHouse + Kafka)
 start-infra:
 	@echo "🐳 Starting Docker infrastructure..."
-	@docker-compose up -d
+	@cd config && docker compose up -d
 	@echo "✅ Infrastructure started!"
+	@echo "   ClickHouse: http://localhost:8123"
+	@echo "   PostgreSQL: localhost:5432"
+	@echo "   Redis: localhost:6379"
+	@echo "   Kafka: localhost:9092"
+	@echo "   Kafka UI: http://localhost:8081"
+
+# Start with StarRocks instead of ClickHouse
+start-infra-starrocks:
+	@echo "🐳 Starting infrastructure with StarRocks..."
+	@cd config && docker compose --profile starrocks up -d
+	@echo "✅ Infrastructure with StarRocks started!"
+	@echo "   StarRocks FE: http://localhost:8030"
+	@echo "   StarRocks MySQL: localhost:9030"
+
+# Start with Redpanda instead of Kafka
+start-infra-redpanda:
+	@echo "🐳 Starting infrastructure with Redpanda..."
+	@cd config && docker compose --profile redpanda up -d clickhouse postgres redis redpanda redpanda-console
+	@echo "✅ Infrastructure with Redpanda started!"
+	@echo "   Redpanda: localhost:19092"
+	@echo "   Redpanda Console: http://localhost:8082"
+
+# Start with Turso (edge SQLite)
+start-infra-turso:
+	@echo "🐳 Starting infrastructure with Turso..."
+	@cd config && docker compose --profile turso up -d
+	@echo "✅ Infrastructure with Turso started!"
+	@echo "   Turso: http://localhost:8080"
+
+# Start ALL optional services (StarRocks + Redpanda + Turso)
+start-infra-all:
+	@echo "🐳 Starting ALL infrastructure services..."
+	@cd config && docker compose --profile starrocks --profile redpanda --profile turso up -d
+	@echo "✅ ALL services started!"
 
 # Start frontend only
 start-frontend:
@@ -95,7 +129,13 @@ stop:
 # Stop infrastructure
 stop-infra:
 	@echo "🛑 Stopping Docker infrastructure..."
-	@docker-compose down
+	@cd config && docker compose down
+
+# Stop and remove all volumes (clean slate)
+stop-infra-clean:
+	@echo "🛑 Stopping infrastructure and removing volumes..."
+	@cd config && docker compose down -v
+	@echo "✅ All data removed!"
 
 # Check status
 status:

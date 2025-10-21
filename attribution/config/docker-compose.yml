@@ -1,10 +1,15 @@
 # Docker Compose for UnMoGrowP Local Development
-# Services: ClickHouse, PostgreSQL, Redis, Kafka, Zookeeper
+# Updated: 2025-10-21 with modern stack improvements
+# Services: ClickHouse, StarRocks, PostgreSQL, Turso, Redis, Kafka (KRaft), Redpanda
 
 version: '3.8'
 
 services:
-  # ClickHouse - OLAP Database for Analytics
+  # ===================================
+  # OLAP DATABASES (Analytics)
+  # ===================================
+
+  # ClickHouse - Primary OLAP Database for Analytics
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     container_name: unmogrowp-clickhouse
@@ -33,7 +38,61 @@ services:
       retries: 5
       start_period: 30s
 
-  # PostgreSQL - OLTP Database for Operational Data
+  # StarRocks - Alternative OLAP (2.2x faster than ClickHouse for wide tables)
+  # Disabled by default - enable with: docker compose --profile starrocks up
+  starrocks-fe:
+    image: starrocks/fe-ubuntu:latest
+    container_name: unmogrowp-starrocks-fe
+    restart: unless-stopped
+    profiles: ["starrocks"]
+    ports:
+      - "8030:8030"  # FE HTTP
+      - "9020:9020"  # FE Thrift
+      - "9030:9030"  # FE MySQL
+    environment:
+      - TZ=UTC
+    volumes:
+      - starrocks_fe_data:/opt/starrocks/fe/meta
+      - starrocks_fe_log:/opt/starrocks/fe/log
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8030 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  starrocks-be:
+    image: starrocks/be-ubuntu:latest
+    container_name: unmogrowp-starrocks-be
+    restart: unless-stopped
+    profiles: ["starrocks"]
+    depends_on:
+      starrocks-fe:
+        condition: service_healthy
+    ports:
+      - "8040:8040"  # BE HTTP
+      - "9060:9060"  # BE Thrift
+    environment:
+      - TZ=UTC
+    volumes:
+      - starrocks_be_data:/opt/starrocks/be/storage
+      - starrocks_be_log:/opt/starrocks/be/log
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8040 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ===================================
+  # OLTP DATABASES (Operational)
+  # ===================================
+
+  # PostgreSQL - Primary OLTP Database
   postgres:
     image: postgres:16-alpine
     container_name: unmogrowp-postgres
@@ -56,6 +115,34 @@ services:
       retries: 5
       start_period: 10s
 
+  # Turso (LibSQL) - Edge-ready distributed SQLite
+  # Disabled by default - enable with: docker compose --profile turso up
+  turso:
+    image: ghcr.io/tursodatabase/libsql-server:latest
+    container_name: unmogrowp-turso
+    restart: unless-stopped
+    profiles: ["turso"]
+    ports:
+      - "8080:8080"  # HTTP API
+      - "5001:5001"  # gRPC
+    environment:
+      SQLD_NODE: primary
+      SQLD_DB_PATH: /var/lib/sqld/data
+    volumes:
+      - turso_data:/var/lib/sqld/data
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===================================
+  # CACHING
+  # ===================================
+
   # Redis - Cache & Session Storage
   redis:
     image: redis:7-alpine
@@ -75,58 +162,50 @@ services:
       retries: 5
       start_period: 5s
 
-  # Zookeeper - Required for Kafka
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: unmogrowp-zookeeper
-    restart: unless-stopped
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_logs:/var/lib/zookeeper/log
-    networks:
-      - unmogrowp-network
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+  # ===================================
+  # EVENT STREAMING (Choose ONE)
+  # ===================================
 
-  # Kafka - Event Streaming Platform
+  # Kafka (KRaft Mode - NO Zookeeper needed!) - Default choice
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.9.0
     container_name: unmogrowp-kafka
     restart: unless-stopped
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      # KRaft Mode Configuration (No Zookeeper!)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+
+      # Listeners
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+
+      # Cluster settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      # Log settings
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
       - unmogrowp-network
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
   # Kafka UI - Web Interface for Kafka Management
   kafka-ui:
@@ -137,11 +216,11 @@ services:
       kafka:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
       - unmogrowp-network
     healthcheck:
@@ -151,15 +230,82 @@ services:
       retries: 3
       start_period: 40s
 
+  # Redpanda - Ultra-fast Kafka alternative (10x faster, Kafka API compatible)
+  # Disabled by default - enable with: docker compose --profile redpanda up
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: unmogrowp-redpanda
+    restart: unless-stopped
+    profiles: ["redpanda"]
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
+      - --overprovisioned
+      - --node-id 0
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+    ports:
+      - "19092:19092"  # Kafka API
+      - "18081:18081"  # Schema Registry
+      - "18082:18082"  # HTTP Proxy
+      - "9644:9644"    # Admin API
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep 'Healthy:.*true' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Redpanda Console - Web UI for Redpanda
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    container_name: unmogrowp-redpanda-console
+    restart: unless-stopped
+    profiles: ["redpanda"]
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8082:8080"
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+      KAFKA_SCHEMAREGISTRY_ENABLED: 'true'
+      KAFKA_SCHEMAREGISTRY_URLS: http://redpanda:8081
+    networks:
+      - unmogrowp-network
+
 networks:
   unmogrowp-network:
     driver: bridge
 
 volumes:
+  # OLAP
   clickhouse_data:
   clickhouse_logs:
+  starrocks_fe_data:
+  starrocks_fe_log:
+  starrocks_be_data:
+  starrocks_be_log:
+
+  # OLTP
   postgres_data:
+  turso_data:
+
+  # Caching
   redis_data:
-  zookeeper_data:
-  zookeeper_logs:
+
+  # Event Streaming
   kafka_data:
+  redpanda_data:

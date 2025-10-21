@@ -1,6 +1,10 @@
+// UnMoGrowP Attribution Platform - API Server
+// Stack: Bun + Hono + tRPC (type-safe API)
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { trpcServer } from '@hono/trpc-server';
+import { appRouter, type AppRouter } from './trpc';
 
 // Create Hono app (3x faster than Node.js Express)
 const app = new Hono();
@@ -8,10 +12,19 @@ const app = new Hono();
 // Middleware
 app.use('*', logger());
 app.use('*', cors({
-  origin: '*',
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// tRPC endpoint (type-safe API)
+app.use(
+  '/trpc/*',
+  trpcServer({
+    router: appRouter,
+  })
+);
 
 // Health check
 app.get('/health', (c) => {
@@ -19,7 +32,9 @@ app.get('/health', (c) => {
     status: 'ok',
     service: 'api-layer',
     runtime: 'bun',
-    version: '1.0.0',
+    framework: 'hono',
+    rpc: 'tRPC',
+    version: '0.3.0',
     timestamp: new Date().toISOString(),
   });
 });
@@ -201,14 +216,24 @@ app.notFound((c) => {
 });
 
 // Start server
-const port = process.env.PORT || 3000;
+const port = parseInt(process.env.PORT || '3001');
 
-console.log(`🚀 Bun + Hono API server starting on port ${port}`);
-console.log(`⚡ Bun runtime: 3x faster than Node.js`);
-console.log(`🔥 Hono framework: Ultra-fast edge-ready`);
-console.log(`📊 API Layer for UnMoGrowP Attribution Platform`);
+console.log(`🚀 API Server starting...`);
+console.log(`   Runtime: Bun ${Bun.version}`);
+console.log(`   Framework: Hono`);
+console.log(`   RPC: tRPC (type-safe)`);
+console.log(`   Port: ${port}`);
+console.log(``);
+console.log(`📡 Endpoints:`);
+console.log(`   Health: http://localhost:${port}/health`);
+console.log(`   tRPC: http://localhost:${port}/trpc`);
+console.log(`   REST (legacy): http://localhost:${port}/api/*`);
+console.log(``);
 
 export default {
   port,
   fetch: app.fetch,
 };
+
+// Export router type for frontend
+export type { AppRouter };
