@@ -30,11 +30,19 @@ app.get('/health', (c) => {
 app.post('/api/auth/login', async (c) => {
   const body = await c.req.json();
 
-  // TODO: Implement authentication logic
+  // TODO: Implement actual authentication logic with PostgreSQL
+  // For now, return mock data with token
   return c.json({
     success: true,
-    message: 'Login endpoint',
-    data: body,
+    message: 'Login successful',
+    data: {
+      token: 'mock-jwt-token-' + Date.now(),
+      user: {
+        id: 'user-123',
+        email: body.email,
+        name: 'Test User',
+      },
+    },
   });
 });
 
@@ -51,10 +59,19 @@ app.post('/api/auth/register', async (c) => {
 app.post('/api/auth/google', async (c) => {
   const body = await c.req.json();
 
-  // TODO: Implement Google OAuth
+  // TODO: Implement actual Google OAuth with Auth.js
+  // For now, return mock data with token
   return c.json({
     success: true,
-    message: 'Google OAuth endpoint',
+    message: 'Google login successful',
+    data: {
+      token: 'mock-google-jwt-token-' + Date.now(),
+      user: {
+        id: 'user-google-123',
+        email: 'user@gmail.com',
+        name: 'Google User',
+      },
+    },
   });
 });
 

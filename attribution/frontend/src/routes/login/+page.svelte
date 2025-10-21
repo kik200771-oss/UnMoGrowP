@@ -1,47 +1,93 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { api } from '$lib/api/client';
+
   // Svelte 5 Runes API - эквивалент useState из React
   let email = $state('');
   let password = $state('');
   let rememberMe = $state(false);
   let isLoading = $state(false);
-  let recaptchaToken = $state<string | null>(null);
+  let errorMessage = $state<string | null>(null);
+  let recaptchaToken = $state<string | null>('mock-recaptcha-token'); // Mock token for testing
   let recaptchaRef: any;
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
 
     if (!recaptchaToken) {
-      alert('Пожалуйста, подтвердите что вы не робот');
+      errorMessage = 'Пожалуйста, подтвердите что вы не робот';
       return;
     }
 
     isLoading = true;
+    errorMessage = null;
 
-    // TODO: Implement actual email/password login logic
-    console.log('Login attempt:', { email, password, rememberMe, recaptchaToken });
+    try {
+      // Call API to login
+      const response = await api.login({
+        email,
+        password,
+        rememberMe,
+        recaptchaToken,
+      });
 
-    setTimeout(() => {
+      if (response.success && response.data) {
+        console.log('Login successful:', response.data);
+
+        // Store token in localStorage
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token);
+        }
+
+        // Navigate to dashboard
+        await goto('/dashboard');
+      } else {
+        errorMessage = response.error || 'Login failed. Please try again.';
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      errorMessage = 'An unexpected error occurred. Please try again.';
+    } finally {
       isLoading = false;
       if (recaptchaRef) {
         recaptchaRef.reset();
       }
-      recaptchaToken = null;
-    }, 1000);
+      // Keep token for now, don't reset
+    }
   }
 
   async function handleGoogleLogin() {
     if (!recaptchaToken) {
-      alert('Пожалуйста, подтвердите что вы не робот');
+      errorMessage = 'Пожалуйста, подтвердите что вы не робот';
       return;
     }
 
     isLoading = true;
+    errorMessage = null;
+
     try {
-      // TODO: Implement Auth.js signIn with Google
-      console.log('Google login attempt');
-      // await signIn('google', { callbackUrl: '/dashboard' });
+      // Call API for Google OAuth
+      const response = await api.googleAuth({
+        recaptchaToken,
+      });
+
+      if (response.success && response.data) {
+        console.log('Google login successful:', response.data);
+
+        // Store token
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token);
+        }
+
+        // Navigate to dashboard
+        await goto('/dashboard');
+      } else {
+        errorMessage = response.error || 'Google login failed. Please try again.';
+      }
     } catch (error) {
       console.error('Google login error:', error);
+      errorMessage = 'An unexpected error occurred. Please try again.';
+    } finally {
       isLoading = false;
     }
   }
@@ -74,6 +120,13 @@
 
       <!-- Form -->
       <form onsubmit={handleSubmit}>
+        <!-- Error Message -->
+        {#if errorMessage}
+          <div class="mb-5 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+            {errorMessage}
+          </div>
+        {/if}
+
         <!-- Email Field with Floating Label -->
         <div class="relative mb-5">
           <input
