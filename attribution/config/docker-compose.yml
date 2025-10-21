@@ -1,0 +1,146 @@
+# Docker Compose for UnMoGrowP Local Development
+# Services: ClickHouse, PostgreSQL, Redis, Kafka, Zookeeper
+
+version: '3.8'
+
+services:
+  # ClickHouse - OLAP Database for Analytics
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: unmogrowp-clickhouse
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native TCP interface
+    environment:
+      CLICKHOUSE_DB: analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./clickhouse-config/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL - OLTP Database for Operational Data
+  postgres:
+    image: postgres:16-alpine
+    container_name: unmogrowp-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: unmogrowp
+      POSTGRES_USER: unmogrowp
+      POSTGRES_PASSWORD: dev_password_123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unmogrowp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Cache & Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: unmogrowp-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass dev_password_123
+    volumes:
+      - redis_data:/data
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper - Required for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: unmogrowp-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kafka - Event Streaming Platform
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: unmogrowp-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - unmogrowp-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Kafka UI - Web Interface for Kafka Management
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: unmogrowp-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - unmogrowp-network
+
+networks:
+  unmogrowp-network:
+    driver: bridge
+
+volumes:
+  clickhouse_data:
+  clickhouse_logs:
+  postgres_data:
+  redis_data:
+  zookeeper_data:
+  zookeeper_logs:
+  kafka_data:

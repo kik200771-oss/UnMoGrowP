@@ -6,7 +6,23 @@
 
 ---
 
-## ⚡ IMPORTANT: Auto-Read Protocol
+## ⚡ CRITICAL: Top Priority Protocol
+
+### 🎯 #1 PRIORITY: WORKFLOW IMPROVEMENTS
+
+**ALWAYS suggest workflow improvements proactively!**
+
+User's instruction: "Организация рабочего процесса стоит во главе всего"
+
+**Before ANY coding task, consider:**
+- Can this be automated? (scripts, Makefile targets)
+- Should this be documented? (process, decision, guide)
+- Will this help the team? (tooling, standards, templates)
+- Can workflow be improved? (faster, clearer, easier)
+
+**If yes to ANY → SUGGEST THE IMPROVEMENT FIRST before proceeding with task**
+
+### Auto-Read Protocol
 
 **When the user says "старт" or "продолжи" or mentions starting a new session:**
 
