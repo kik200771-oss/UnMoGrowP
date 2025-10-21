@@ -6,6 +6,19 @@
 
 ---
 
+## ⚡ IMPORTANT: Auto-Read Protocol
+
+**When the user says "старт" or "продолжи" or mentions starting a new session:**
+
+1. **AUTOMATICALLY READ THIS FILE** (.claude/project-context.md)
+2. **AUTOMATICALLY READ** docs/CURRENT_STATUS.md
+3. **AUTOMATICALLY RUN** `git log --oneline -5`
+4. **RESPOND:** "✅ Контекст загружен! [brief summary]. Готов продолжить."
+
+This ensures seamless context continuity without user having to explicitly request file reads.
+
+---
+
 ## 🎯 Project Overview
 
 **Name:** UnMoGrowP (Unified Mobile Growth Platform)
