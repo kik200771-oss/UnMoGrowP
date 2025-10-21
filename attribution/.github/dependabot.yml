@@ -12,9 +12,9 @@ updates:
       - "dependencies"
       - "frontend"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(frontend)"
       include: "scope"
@@ -32,9 +32,9 @@ updates:
       - "dependencies"
       - "api"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(api)"
       include: "scope"
@@ -52,9 +52,9 @@ updates:
       - "dependencies"
       - "root"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(root)"
       include: "scope"
@@ -73,9 +73,9 @@ updates:
       - "backend"
       - "go"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(backend)"
       include: "scope"
@@ -94,9 +94,9 @@ updates:
       - "github-actions"
       - "ci/cd"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(ci)"
       include: "scope"
@@ -113,9 +113,9 @@ updates:
       - "dependencies"
       - "docker"
     reviewers:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     assignees:
-      - "your-github-username"  # Update this
+      - "kik200771-oss"
     commit-message:
       prefix: "chore(docker)"
       include: "scope"
