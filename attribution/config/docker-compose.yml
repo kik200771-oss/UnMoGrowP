@@ -8,6 +8,7 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     container_name: unmogrowp-clickhouse
+    restart: unless-stopped
     ports:
       - "8123:8123"  # HTTP interface
       - "9000:9000"  # Native TCP interface
@@ -30,11 +31,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   # PostgreSQL - OLTP Database for Operational Data
   postgres:
     image: postgres:16-alpine
     container_name: unmogrowp-postgres
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -51,11 +54,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   # Redis - Cache & Session Storage
   redis:
     image: redis:7-alpine
     container_name: unmogrowp-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes --requirepass dev_password_123
@@ -68,11 +73,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 5s
 
   # Zookeeper - Required for Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: unmogrowp-zookeeper
+    restart: unless-stopped
     ports:
       - "2181:2181"
     environment:
@@ -88,13 +95,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   # Kafka - Event Streaming Platform
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: unmogrowp-kafka
+    restart: unless-stopped
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
@@ -116,13 +126,16 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 30s
 
   # Kafka UI - Web Interface for Kafka Management
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: unmogrowp-kafka-ui
+    restart: unless-stopped
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -131,6 +144,12 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     networks:
       - unmogrowp-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   unmogrowp-network:

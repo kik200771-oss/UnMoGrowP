@@ -78,6 +78,11 @@ start-backend:
 	@echo "🚀 Starting Go backend..."
 	@cd backend/cmd/ingestion && go run main.go
 
+# Start Go backend with hot reload
+start-backend-dev:
+	@echo "🔥 Starting Go backend with hot reload..."
+	@bash scripts/dev-go.sh
+
 # Stop all services
 stop:
 	@echo "🛑 Stopping all services..."
@@ -112,6 +117,10 @@ status:
 # Show logs
 logs:
 	@docker-compose logs -f
+
+# Monitor services
+monitor:
+	@bash scripts/monitor.sh
 
 # Clean build artifacts
 clean:
@@ -184,3 +193,7 @@ push:
 
 # Development: Quick restart
 restart: stop start
+
+# Generate documentation
+docs:
+	@bash scripts/generate-docs.sh

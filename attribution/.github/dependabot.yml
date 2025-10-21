@@ -1,0 +1,121 @@
+version: 2
+updates:
+  # Frontend dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # API dependencies (npm/bun)
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "api"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(api)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # Root dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "root"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(root)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # Backend dependencies (Go)
+  - package-ecosystem: "gomod"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+      - "go"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/config"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "your-github-username"  # Update this
+    assignees:
+      - "your-github-username"  # Update this
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
