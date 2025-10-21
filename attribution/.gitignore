@@ -1,0 +1,110 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js (legacy - being removed)
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# ========================================
+# NEW STACK (Svelte 5 + Go + Bun)
+# ========================================
+
+# SvelteKit
+/frontend/.svelte-kit
+/frontend/build
+/frontend/dist
+/frontend/.env
+/frontend/.env.*
+!/frontend/.env.example
+
+# Bun
+/api/.env
+/api/.env.*
+!/api/.env.example
+/api/dist
+
+# Go
+/backend/bin
+/backend/tmp
+/backend/.env
+/backend/.env.*
+!/backend/.env.example
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# ========================================
+# LEGACY FILES (to be removed)
+# ========================================
+# These files are from old Next.js setup
+# Keep gitignored until cleanup
+/app/
+/components/
+/lib/agents/
+/public/
+/scripts/
+/prototypes/
+/team/
+next.config.ts
+tailwind.config.ts
+postcss.config.mjs
+components.json
+package.json
+package-lock.json
+tsconfig.json
+eslint.config.mjs
