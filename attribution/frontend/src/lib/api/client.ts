@@ -1,11 +1,15 @@
 /**
  * API Client for UnMoGrowP Attribution Platform
  *
- * Communicates with Bun + Hono API layer (http://localhost:3001)
+ * Communicates with Bun + Hono API layer (http://localhost:3004)
+ * JWT RBAC Authorization + Real ClickHouse Data
  * All requests are typed and include error handling
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { browser } from '$app/environment';
+import Cookies from 'js-cookie';
+
+const API_BASE_URL = 'http://localhost:3007'; // Force port 3007 - the working API server with password reset
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -64,8 +68,23 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
+  private getAuthHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (browser) {
+      const token = Cookies.get('auth_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    return headers;
+  }
+
   /**
-   * Generic fetch wrapper with error handling
+   * Generic fetch wrapper with JWT authentication and error handling
    */
   private async request<T>(
     endpoint: string,
@@ -75,16 +94,22 @@ class ApiClient {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
           ...options.headers,
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Always try to parse JSON response, regardless of status code
+      const data = await response.json();
+
+      // If response is not ok and data doesn't have success field, add it
+      if (!response.ok && data.success === undefined) {
+        return {
+          success: false,
+          error: data.message || `HTTP ${response.status}: ${response.statusText}`,
+        };
       }
 
-      const data = await response.json();
       return data;
     } catch (error) {
       console.error(`API Error [${endpoint}]:`, error);
@@ -93,6 +118,30 @@ class ApiClient {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  }
+
+  // JWT Authentication utilities
+  saveAuthToken(token: string, rememberMe: boolean = false): void {
+    if (browser) {
+      const expires = rememberMe ? 7 : 1; // 7 days or 1 day
+      Cookies.set('auth_token', token, { expires });
+    }
+  }
+
+  clearAuthToken(): void {
+    if (browser) {
+      Cookies.remove('auth_token');
+    }
+  }
+
+  isAuthenticated(): boolean {
+    if (!browser) return false;
+    return !!Cookies.get('auth_token');
+  }
+
+  getToken(): string | undefined {
+    if (!browser) return undefined;
+    return Cookies.get('auth_token');
   }
 
   // ==================== Authentication ====================
@@ -108,13 +157,29 @@ class ApiClient {
   }
 
   /**
+   * Check if email is available for registration
+   */
+  async checkEmailAvailability(email: string): Promise<ApiResponse<{ available: boolean; message?: string }>> {
+    return this.request<{ available: boolean; message?: string }>('/api/auth/check-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  /**
    * Register new user
    */
-  async register(email: string, password: string, name: string): Promise<ApiResponse> {
-    return this.request('/api/auth/register', {
+  async register(email: string, password: string, name: string): Promise<ApiResponse<LoginResponse>> {
+    console.log('[API CLIENT] Register request to:', `${this.baseUrl}/api/auth/register`); // DEBUG
+    console.log('[API CLIENT] Request payload:', { email, password: '***', name }); // DEBUG
+
+    const response = await this.request<LoginResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     });
+
+    console.log('[API CLIENT] Register response:', response); // DEBUG
+    return response;
   }
 
   /**
@@ -124,6 +189,36 @@ class ApiClient {
     return this.request<LoginResponse>('/api/auth/google', {
       method: 'POST',
       body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Request password reset
+   */
+  async forgotPassword(email: string): Promise<ApiResponse<{ resetToken?: string; expiresAt?: string }>> {
+    return this.request<{ resetToken?: string; expiresAt?: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  /**
+   * Reset password with token
+   */
+  async resetPassword(token: string, newPassword: string): Promise<ApiResponse> {
+    return this.request('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    });
+  }
+
+  /**
+   * Verify password reset token
+   */
+  async verifyResetToken(token: string): Promise<ApiResponse<{ email: string }>> {
+    return this.request<{ email: string }>('/api/auth/verify-reset-token', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
     });
   }
 
