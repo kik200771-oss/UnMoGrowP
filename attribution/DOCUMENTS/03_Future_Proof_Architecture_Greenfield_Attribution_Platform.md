@@ -1627,10 +1627,20 @@ customElements.define('attribution-widget', AttributionWidget);
 
 ## 👥 Team Structure & Responsibilities
 
-### Recommended Team Composition
+### AI-Augmented Team Composition
 
 ```
-Platform Engineering (50 people total)
+Platform Engineering (50 people + 4 AI Agents)
+│
+├── 🤖 AI Agent Layer (4 specialized agents)
+│   ├── Architecture Agent (Senior System Architect AI)
+│   │   └── System design, code review, tech debt management
+│   ├── Go Code Agent (Senior Go Developer AI)
+│   │   └── High-performance Go optimization, microservices
+│   ├── Testing Agent (QA Lead + Automation QA AI)
+│   │   └── Test generation, performance testing, E2E automation
+│   └── DevOps Agent (Platform Engineer + SRE AI)
+│       └── Infrastructure, monitoring, capacity planning
 │
 ├── Frontend Team (15 people)
 │   ├── Dashboard Team (8)
@@ -1662,43 +1672,93 @@ Platform Engineering (50 people total)
     └── Manual Testing (2)
 ```
 
+### 🤖 AI Agent Integration
+
+The AI agents are designed to augment human capabilities, not replace them:
+
+| Agent | Human Collaboration | AI Capabilities |
+|-------|-------------------|-----------------|
+| **Architecture Agent** | Works with Staff+ Engineers | System design, architectural reviews, tech debt analysis |
+| **Go Code Agent** | Pairs with Backend Engineers | Performance optimization, microservice generation, code review |
+| **Testing Agent** | Supports QA Engineers | Test generation, load testing, coverage analysis |
+| **DevOps Agent** | Assists Platform Engineers | Infrastructure automation, monitoring setup, capacity planning |
+
+### Agent Interaction Workflow
+
+```
+1. Feature Request
+   ↓
+2. Architecture Agent → System Design
+   ↓
+3. Go Code Agent → Implementation
+   ↓
+4. Testing Agent → Test Generation
+   ↓
+5. DevOps Agent → Deployment & Monitoring
+   ↓
+6. Human Review & Validation
+   ↓
+7. Production Deployment
+```
+
 ### Skill Matrix
 
 | Role | Required Skills | Nice to Have |
 |------|----------------|--------------|
+| **🤖 Architecture Agent** | System Design, Tech Stack Analysis | Enterprise Architecture, Performance Analysis |
+| **🤖 Go Code Agent** | Go Optimization, Microservices | Performance Tuning, 10M events/sec processing |
+| **🤖 Testing Agent** | Test Automation, k6, Playwright | Attribution Testing, Performance Validation |
+| **🤖 DevOps Agent** | Kubernetes, Terraform, Monitoring | SRE Practices, Capacity Planning |
 | **Frontend Engineer** | TypeScript, Svelte, TanStack Query | WebAssembly, WebGL, Performance tuning |
 | **Backend Engineer** | TypeScript/Rust, Bun/Hono, Kafka | ClickHouse, Flink, Kubernetes |
 | **Data Engineer** | SQL, Python, Spark | ClickHouse, Kafka Streams, Airflow |
 | **DevOps Engineer** | Kubernetes, Terraform, CI/CD | Istio, Argo CD, Prometheus |
 | **ML Engineer** | Python, PyTorch, Statistics | Rust, Production ML, Feature Engineering |
 
-### Development Workflow
+### AI-Augmented Development Workflow
 
 ```
 1. Feature Request
    ↓
-2. Design Review (Team Lead + Architect)
+2. 🤖 Architecture Agent → System Design Analysis
+   ├→ Technical requirements analysis
+   ├→ Architecture impact assessment
+   └→ Implementation recommendations
    ↓
-3. Implementation (Engineer)
-   ├→ Write code
-   ├→ Write tests
-   ├→ Write docs
+3. Design Review (Team Lead + Human Architect + AI insights)
+   ↓
+4. Implementation (Engineer + AI assistance)
+   ├→ 🤖 Go Code Agent → Code generation & optimization
+   ├→ 🤖 Testing Agent → Test suite generation
+   ├→ Write/review code with AI suggestions
+   ├→ AI-generated tests + manual test additions
+   ├→ Write docs (with AI assistance)
    └→ Create PR
    ↓
-4. Code Review (2 approvals required)
+5. Code Review (2 human approvals + AI analysis)
+   ├→ 🤖 Architecture Agent → Code architecture review
+   ├→ 🤖 Go Code Agent → Performance analysis
+   └→ Human reviewers validate AI recommendations
    ↓
-5. Automated Tests (CI)
-   ├→ Unit tests
+6. Automated Tests (CI + AI-enhanced testing)
+   ├→ 🤖 Testing Agent → Dynamic test generation
+   ├→ Unit tests (AI-generated + manual)
    ├→ Integration tests
-   ├→ E2E tests
-   └→ Performance tests
+   ├→ E2E tests (AI scenarios)
+   └→ Performance tests (AI benchmarks)
    ↓
-6. Deploy to Staging (Argo CD)
+7. Deploy to Staging (Argo CD)
+   ├→ 🤖 DevOps Agent → Pre-deployment checks
+   └→ Infrastructure validation
    ↓
-7. QA Testing
+8. QA Testing (Human + AI validation)
+   ├→ 🤖 Testing Agent → Automated E2E validation
+   └→ Human exploratory testing
    ↓
-8. Deploy to Production (Canary)
+9. Deploy to Production (Canary + AI monitoring)
+   ├→ 🤖 DevOps Agent → Deployment automation
    ├→ 5% traffic
+   ├→ AI-powered monitoring & analysis
    ├→ Monitor 24h
    ├→ 25% traffic
    ├→ Monitor 24h
@@ -1717,7 +1777,7 @@ Platform Engineering (50 people total)
 | **Performance issues at scale** | Low | High | • Load testing from day 1<br>• Horizontal scaling<br>• Caching layers |
 | **Data pipeline failures** | Medium | High | • Kafka for buffering<br>• Dead letter queues<br>• Automated retries |
 | **Security breach** | Low | Critical | • Multi-layer security<br>• Regular audits<br>• Bug bounty program |
-| **Team skill gaps** | Medium | Medium | • Training program<br>• Pair programming<br>• External consultants |
+| **Team skill gaps** | Low | Low | • AI Agents augment human capabilities<br>• Training program<br>• Pair programming<br>• External consultants |
 
 ### Business Risks
 
@@ -1780,7 +1840,7 @@ if (k8sComplexity) {
 ✓ Basic dashboard (read-only)
 ```
 
-**Team:** 10 people (5 frontend, 3 backend, 2 DevOps)
+**Team:** 10 people + 4 AI Agents (5 frontend, 3 backend, 2 DevOps)
 
 ### Phase 2: Core Features (Months 4-6)
 
@@ -1800,7 +1860,7 @@ if (k8sComplexity) {
 ✓ Organization management
 ```
 
-**Team:** 20 people (8 frontend, 8 backend, 2 data, 2 DevOps)
+**Team:** 20 people + 4 AI Agents (8 frontend, 8 backend, 2 data, 2 DevOps)
 
 ### Phase 3: Advanced Features (Months 7-12)
 
@@ -1820,7 +1880,7 @@ if (k8sComplexity) {
 ✓ Slack/Email alerts
 ```
 
-**Team:** 35 people (full team ramped up)
+**Team:** 35 people + 4 AI Agents (full team ramped up)
 
 ### Phase 4: Scale & Optimize (Months 13-18)
 
