@@ -62,7 +62,11 @@
       "Bash(/c/КОДИНГ/attribution/tools/scripts/simulate-week2-sprint.sh:*)",
       "Bash(node tools/execution/start-week3-sprint.js:*)",
       "Bash(node tools/execution/week3-accelerated-acquisition.js:*)",
-      "Bash(node tools/coordination/week3-final-coordination.js:*)"
+      "Bash(node tools/coordination/week3-final-coordination.js:*)",
+      "Bash(npm init svelte@next .)",
+      "Bash(npm create svelte@latest .)",
+      "Bash(node:*)",
+      "Bash(docker:*)"
     ],
     "deny": [],
     "ask": []
