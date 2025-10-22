@@ -58,7 +58,8 @@
       "Bash(where:*)",
       "Bash(dir:*)",
       "Bash(test:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(/c/КОДИНГ/attribution/tools/scripts/simulate-week2-sprint.sh:*)"
     ],
     "deny": [],
     "ask": []
