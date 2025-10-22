@@ -34,23 +34,36 @@ internal/
     └── clickhouse.go           # 🗄️ ClickHouse analytics database
 ```
 
-### **Frontend (Svelte 5 + TypeScript)**
+### **Frontend (Svelte 5 + TypeScript) - Mobile Attribution Platform**
 ```
 apps/web-ui/src/
 ├── routes/
+│   ├── app/                    # 🎮 MAIN ATTRIBUTION PLATFORM (AppsFlyer-inspired)
+│   │   ├── overview/           # 📊 Main dashboard with attribution metrics
+│   │   ├── cohorts/            # 👥 User retention and cohort analysis (planned)
+│   │   ├── raw-data/           # 🔍 Event-level data and detailed logs (planned)
+│   │   ├── pivot/              # 📈 Custom reports and data analysis (planned)
+│   │   ├── roi360/             # 💰 Campaign profitability and ROAS (planned)
+│   │   ├── partners/           # 🤝 Ad network integrations (planned)
+│   │   └── configuration/      # ⚙️ App settings and integration setup (planned)
 │   ├── demo/                   # 🌟 PUBLIC demo page (no auth)
 │   │   └── +page.svelte        # Live metrics showcase with beautiful UI
 │   ├── dashboard-redis/        # 🔧 Admin dashboard with Redis metrics
 │   │   └── +page.svelte        # System monitoring and cache performance
-│   ├── dashboard/              # 👥 Client dashboard with ECharts
-│   │   └── +page.svelte        # Business analytics and attribution data
+│   ├── dashboard/              # 👥 Legacy dashboard (redirects to /app/overview)
+│   │   └── +page.svelte        # Redirect to new attribution structure
+│   ├── app-dashboard/          # 📱 Alternative dashboard view
+│   │   └── +page.svelte        # Enhanced dashboard with mobile metrics
 │   ├── login/ & register/      # 🔐 Authentication pages
 │   └── forgot-password/        # 🔑 Password recovery
 │
 ├── lib/
-│   ├── components/dashboard/   # 📊 Reusable dashboard components
-│   │   ├── MetricsOverview.svelte    # Live metrics with cache indicators
-│   │   └── CustomersTable.svelte     # Advanced table with sorting & filtering
+│   ├── components/
+│   │   ├── layout/             # 🏗️ MAIN APPLICATION LAYOUT
+│   │   │   └── AppLayout.svelte # AppsFlyer-inspired SaaS layout with navigation
+│   │   └── dashboard/          # 📊 Reusable dashboard components
+│   │       ├── MetricsOverview.svelte    # Live metrics with cache indicators
+│   │       └── CustomersTable.svelte     # Advanced table with sorting & filtering
 │   ├── stores/
 │   │   └── auth.ts             # 🔒 Authentication state management
 │   ├── api/
@@ -60,7 +73,15 @@ apps/web-ui/src/
 
 ## 🎯 **Key Features Implemented**
 
-### **1. 📊 Advanced Metrics System**
+### **1. 🎮 Mobile Attribution Platform (AppsFlyer-Inspired)**
+- **Complete navigation structure**: Overview, Cohorts, Raw Data, Pivot, ROI360, Partners, Configuration
+- **App selector**: Multi-app management for different mobile games
+- **Attribution metrics**: Install tracking, session analytics, revenue attribution
+- **Traffic source performance**: Facebook Ads, Google Ads, Unity, TikTok campaigns
+- **Geographic analysis**: Country-based performance with conversion funnels
+- **SaaS layout design**: Professional sidebar navigation with responsive design
+
+### **2. 📊 Advanced Metrics System**
 - **Real-time monitoring**: Requests, errors, memory, goroutines
 - **Performance tracking**: Response times, RPS, error rates
 - **Business metrics**: Events processed, customers served, cache hit rates
@@ -182,7 +203,17 @@ apps/web-ui/src/
 - [ ] **Multi-tenant** architecture implementation
 - [ ] **API rate limiting** and advanced security
 
-## 📝 **Recent Major Updates (v3.1.0)**
+## 📝 **Recent Major Updates (v3.2.0)**
+- ✅ **AppsFlyer-inspired mobile attribution platform** with complete navigation structure
+- ✅ **AppLayout.svelte**: Professional SaaS layout with sidebar navigation and app selector
+- ✅ **Mobile game attribution metrics**: Install tracking, session analytics, revenue attribution
+- ✅ **Traffic source performance tracking**: Facebook, Google, Unity, TikTok campaign analytics
+- ✅ **Geographic performance analysis** with conversion funnel visualization
+- ✅ **Multi-app management**: App selector for switching between different mobile games
+- ✅ **Complete attribution workflow**: Overview → Cohorts → Raw Data → Pivot → ROI360 → Partners → Configuration
+- ✅ **Production-ready mobile attribution SaaS platform** architecture
+
+## 📝 **Previous Updates (v3.1.0)**
 - ✅ Complete metrics system with atomic operations
 - ✅ Redis caching integration with 28% performance boost
 - ✅ Public demo page with live system monitoring
@@ -191,6 +222,7 @@ apps/web-ui/src/
 - ✅ Professional UI/UX with modern design patterns
 
 ---
-**Status**: 🟢 **PRODUCTION READY** - Full-featured attribution platform with live monitoring
-**Demo**: http://localhost:5173/demo (🌟 Try it now!)
-**Last Updated**: 2025-10-22 (v3.1.0 - Metrics & Demo Release)
+**Status**: 🟢 **PRODUCTION READY** - Mobile Attribution Platform for Game Developers
+**Demo**: http://localhost:5173/demo (🌟 Public showcase!)
+**Attribution Platform**: http://localhost:5173/app/overview (🎮 Main platform after login)
+**Last Updated**: 2025-10-22 (v3.2.0 - AppsFlyer-Inspired Mobile Attribution Platform)
