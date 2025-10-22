@@ -1,6 +1,9 @@
+-- ============================================================================
 -- UnMoGrowP Attribution Platform Database Schema
--- Created: 2025-10-21
--- Description: Core tables for user authentication and app management
+-- PostgreSQL Schema for User Management, Apps, and Configuration
+-- Updated: 2025-10-22
+-- Optimized for Enterprise Multi-tenant Architecture
+-- ============================================================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

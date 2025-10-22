@@ -1,52 +1,106 @@
+-- ============================================================================
 -- ClickHouse Schema for UnMoGrowP Attribution Platform
--- Real-time event analytics and attribution
--- Date: 2025-10-21
+-- Optimized for 10M+ events/sec ingestion and analytics
+-- Updated: 2025-10-22
+-- ============================================================================
 
--- Events table for real-time analytics (optimized for 100M+ events/day)
+-- Create database
+CREATE DATABASE IF NOT EXISTS attribution;
+USE attribution;
+
+-- ============================================================================
+-- MAIN EVENTS TABLE - Optimized for high-throughput ingestion
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS events (
-    id UUID DEFAULT generateUUIDv4(),
-    event_type String,
+    -- Event identification
+    event_id String,
     app_id String,
-    user_id Nullable(String),
-    device_id String,
+    user_id String,
     session_id String,
 
-    -- Attribution data
-    campaign_id Nullable(String),
-    source Nullable(String),
-    medium Nullable(String),
-    content Nullable(String),
-    term Nullable(String),
+    -- Event metadata
+    event_type LowCardinality(String), -- install, click, impression, conversion
+    timestamp DateTime64(3, 'UTC'),
+    server_timestamp DateTime64(3, 'UTC') DEFAULT now(),
 
-    -- Device & Platform
-    platform String DEFAULT 'unknown',
-    device_type Nullable(String),
-    os_name Nullable(String),
-    os_version Nullable(String),
-    app_version Nullable(String),
+    -- Device & Platform information
+    device_id String,
+    idfa String,
+    gaid String,
+    platform LowCardinality(String), -- ios, android, web
+    os_version String,
+    app_version String,
 
-    -- Geographic data
-    country Nullable(String),
-    region Nullable(String),
-    city Nullable(String),
-    ip_address Nullable(IPv4),
+    -- Geographic & Context
+    country FixedString(2),
+    region String,
+    city String,
+    language FixedString(2),
+    timezone String,
+    user_agent String,
+    ip_address IPv4,
 
-    -- Event properties
-    properties String DEFAULT '{}', -- JSON string
-    revenue Nullable(Float64),
-    currency Nullable(String),
+    -- Attribution fields
+    campaign_id String,
+    ad_group_id String,
+    creative_id String,
+    network_id LowCardinality(String),
+    channel LowCardinality(String),
+    source String,
+    medium String,
 
-    -- Timestamps (critical for analytics)
-    event_timestamp DateTime64(3) DEFAULT now64(3),
-    server_timestamp DateTime64(3) DEFAULT now64(3),
-    created_at DateTime DEFAULT now(),
+    -- Revenue & monetization
+    revenue Decimal64(4),
+    currency FixedString(3),
 
-    -- Partitioning and indexing
-    date Date DEFAULT toDate(event_timestamp)
+    -- Custom parameters (JSON for flexibility)
+    custom_params String,
+
+    -- Technical metadata
+    sdk_version String,
+    api_version UInt8 DEFAULT 1,
+    processing_time DateTime64(3, 'UTC') DEFAULT now()
+
 ) ENGINE = MergeTree()
-PARTITION BY date
-ORDER BY (app_id, event_type, event_timestamp)
-TTL created_at + INTERVAL 2 YEAR  -- 2 years data retention
+PARTITION BY toYYYYMM(timestamp)
+ORDER BY (app_id, platform, event_type, timestamp, user_id)
+SAMPLE BY cityHash64(user_id)
+SETTINGS index_granularity = 8192;
+
+-- ============================================================================
+-- ATTRIBUTION RESULTS TABLE - Calculated attribution data
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS attribution_results (
+    -- Attribution identification
+    attribution_id String,
+    user_id String,
+    session_id String,
+    app_id String,
+
+    -- Attribution metadata
+    model_type LowCardinality(String), -- first_touch, last_touch, linear, etc.
+    calculated_at DateTime64(3, 'UTC'),
+    journey_start DateTime64(3, 'UTC'),
+    journey_end DateTime64(3, 'UTC'),
+    journey_length UInt16,
+    time_to_convert UInt32, -- seconds
+
+    -- Attribution results (JSON for flexibility)
+    attribution_data String, -- JSON with touchpoint credits
+
+    -- Revenue attribution
+    total_revenue Decimal64(4),
+    currency FixedString(3),
+
+    -- Quality metrics
+    confidence_score Float32,
+    data_quality_score Float32
+
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(calculated_at)
+ORDER BY (app_id, model_type, calculated_at, user_id)
 SETTINGS index_granularity = 8192;
 
 -- Users aggregation table (materialized view for performance)
