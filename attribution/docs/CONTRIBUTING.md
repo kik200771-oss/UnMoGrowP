@@ -30,7 +30,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 ```bash
 # 1. Clone repository
-git clone <repo-url>
+git clone https://github.com/kik200771-oss/UnMoGrowP.git
 cd attribution
 
 # 2. Copy environment files

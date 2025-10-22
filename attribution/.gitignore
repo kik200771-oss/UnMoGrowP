@@ -113,22 +113,33 @@ backup-*.sh
 **/.env.prod*
 
 # ========================================
-# LEGACY FILES (to be removed)
+# BUILD ARTIFACTS & CACHES
 # ========================================
-# These files are from old Next.js setup
-# Keep gitignored until cleanup
-/app/
-/components/
-/lib/agents/
-/public/
-/scripts/
-/prototypes/
-/team/
-next.config.ts
-tailwind.config.ts
-postcss.config.mjs
-components.json
-package.json
+# Node.js
+node_modules/
 package-lock.json
-tsconfig.json
-eslint.config.mjs
+*.tsbuildinfo
+
+# Bun
+bun.lockb
+
+# Go
+/backend/bin/
+/backend/tmp/
+/backend/*.exe
+/backend/__debug_bin*
+
+# Rust (future)
+/backend-rust/target/
+/backend-rust/Cargo.lock
+
+# Databases
+*.sqlite
+*.db
+
+# ========================================
+# DEVELOPMENT ARTIFACTS (CLEANED UP)
+# ========================================
+# Test files are now in tests/ directory
+# Documentation is now in docs/ directory
+# No longer ignoring core config files like package.json

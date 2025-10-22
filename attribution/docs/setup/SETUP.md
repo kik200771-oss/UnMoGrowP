@@ -455,7 +455,7 @@ After completing setup:
 
 1. **Clone Repository** (if not already done):
    ```powershell
-   git clone <your-repo-url>
+   git clone https://github.com/kik200771-oss/UnMoGrowP.git
    cd attribution
    ```
 

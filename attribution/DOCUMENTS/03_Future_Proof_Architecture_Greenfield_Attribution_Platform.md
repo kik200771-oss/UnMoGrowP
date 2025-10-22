@@ -1478,7 +1478,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/company/attribution-platform
+    repoURL: https://github.com/kik200771-oss/UnMoGrowP
     targetRevision: main
     path: k8s
   destination:
@@ -2021,7 +2021,7 @@ if (k8sComplexity) {
 
 Полные примеры кода доступны в репозитории:
 ```
-https://github.com/company/attribution-platform-examples
+https://github.com/kik200771-oss/UnMoGrowP
 ```
 
 ## Appendix B: Decision Log

@@ -1,99 +1,59 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { api } from '$lib/api/client';
+  import { page } from '$app/stores';
+  import { auth, authState } from '$lib/stores/auth';
 
-  // Svelte 5 Runes API - эквивалент useState из React
+  // Svelte 5 Runes API - form state
   let email = $state('');
   let password = $state('');
   let rememberMe = $state(false);
-  let isLoading = $state(false);
-  let errorMessage = $state<string | null>(null);
-  let recaptchaToken = $state<string | null>('mock-recaptcha-token'); // Mock token for testing
-  let recaptchaRef: any;
+
+  // Subscribe to auth state from store using Svelte 5 runes
+  const authStateValue = $derived($authState);
+  const isAuthenticated = $derived(authStateValue.isAuthenticated);
+  const isLoading = $derived(authStateValue.isLoading);
+  const error = $derived(authStateValue.error);
+
+  // Redirect if already authenticated and fill email from URL parameter
+  onMount(() => {
+    if (isAuthenticated) {
+      goto('/dashboard');
+      return;
+    }
+
+    // Check if email is provided in URL parameters
+    const urlEmail = $page.url.searchParams.get('email');
+    if (urlEmail) {
+      email = decodeURIComponent(urlEmail);
+    }
+  });
+
+  // Redirect on successful login using effect
+  $effect(() => {
+    if (isAuthenticated) {
+      goto('/dashboard');
+    }
+  });
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
 
-    if (!recaptchaToken) {
-      errorMessage = 'Пожалуйста, подтвердите что вы не робот';
-      return;
-    }
+    // Use the auth store for login
+    const success = await auth.login(email, password, rememberMe);
 
-    isLoading = true;
-    errorMessage = null;
-
-    try {
-      // Call API to login
-      const response = await api.login({
-        email,
-        password,
-        rememberMe,
-        recaptchaToken,
-      });
-
-      if (response.success && response.data) {
-        console.log('Login successful:', response.data);
-
-        // Store token in localStorage
-        if (response.data.token) {
-          localStorage.setItem('auth_token', response.data.token);
-        }
-
-        // Navigate to dashboard
-        await goto('/dashboard');
-      } else {
-        errorMessage = response.error || 'Login failed. Please try again.';
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      errorMessage = 'An unexpected error occurred. Please try again.';
-    } finally {
-      isLoading = false;
-      if (recaptchaRef) {
-        recaptchaRef.reset();
-      }
-      // Keep token for now, don't reset
+    if (!success) {
+      console.error('Login failed - check auth store error state');
     }
   }
 
   async function handleGoogleLogin() {
-    if (!recaptchaToken) {
-      errorMessage = 'Пожалуйста, подтвердите что вы не робот';
-      return;
+    // Use the auth store for Google login
+    const success = await auth.googleAuth();
+
+    if (!success) {
+      console.error('Google login failed - check auth store error state');
     }
-
-    isLoading = true;
-    errorMessage = null;
-
-    try {
-      // Call API for Google OAuth
-      const response = await api.googleAuth({
-        recaptchaToken,
-      });
-
-      if (response.success && response.data) {
-        console.log('Google login successful:', response.data);
-
-        // Store token
-        if (response.data.token) {
-          localStorage.setItem('auth_token', response.data.token);
-        }
-
-        // Navigate to dashboard
-        await goto('/dashboard');
-      } else {
-        errorMessage = response.error || 'Google login failed. Please try again.';
-      }
-    } catch (error) {
-      console.error('Google login error:', error);
-      errorMessage = 'An unexpected error occurred. Please try again.';
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  function onRecaptchaChange(token: string | null) {
-    recaptchaToken = token;
   }
 </script>
 
@@ -121,9 +81,9 @@
       <!-- Form -->
       <form onsubmit={handleSubmit}>
         <!-- Error Message -->
-        {#if errorMessage}
+        {#if error}
           <div class="mb-5 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-            {errorMessage}
+            {error}
           </div>
         {/if}
 
@@ -197,7 +157,7 @@
       <button
         type="button"
         onclick={handleGoogleLogin}
-        disabled={isLoading || !recaptchaToken}
+        disabled={isLoading}
         class="w-full h-12 bg-white border border-[#e2e8f0] rounded text-sm text-[#4a5568] cursor-pointer transition-colors flex items-center justify-center gap-3 mb-6 hover:bg-[#f7fafc] disabled:opacity-50"
       >
         <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -209,24 +169,18 @@
         <span>Вход через аккаунт Google</span>
       </button>
 
-      <!-- Google reCAPTCHA Placeholder -->
-      <div class="flex justify-center mb-6">
-        <div class="text-sm text-gray-500">
-          [reCAPTCHA будет здесь]
-        </div>
-      </div>
 
       <!-- Footer Links -->
       <div class="flex items-center justify-between">
         <a
-          href="#"
+          href="/forgot-password"
           class="text-sm transition-colors hover:text-[rgb(48,80,147)]"
           style="color: rgb(109, 140, 248);"
         >
           Forgot password?
         </a>
         <a
-          href="#"
+          href="/register"
           class="text-sm transition-colors hover:text-[rgb(48,80,147)]"
           style="color: rgb(109, 140, 248);"
         >

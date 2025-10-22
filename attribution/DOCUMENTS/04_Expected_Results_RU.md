@@ -1333,8 +1333,8 @@ test('renders chart', () => {
 
 ```bash
 # Шаг 1: Clone + Install (5 минут)
-git clone https://github.com/company/attribution-platform
-cd attribution-platform
+git clone https://github.com/kik200771-oss/UnMoGrowP.git
+cd UnMoGrowP
 bun install  # Bun гораздо быстрее npm (3x)
 
 # Зависимости установлены за 1-2 минуты

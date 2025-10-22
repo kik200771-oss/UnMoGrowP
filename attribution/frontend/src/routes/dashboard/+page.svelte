@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { api } from '$lib/api/client';
+  import { auth, authState } from '$lib/stores/auth';
   import * as echarts from 'echarts/core';
   import { LineChart } from 'echarts/charts';
   import { GridComponent, TooltipComponent, TitleComponent } from 'echarts/components';
@@ -20,10 +21,14 @@
   });
   let chartInstance: echarts.ECharts | null = null;
 
+  // Subscribe to auth state using Svelte 5 runes
+  const authStateValue = $derived($authState);
+  const isAuthenticated = $derived(authStateValue.isAuthenticated);
+  const user = $derived(authStateValue.user);
+
   // Check authentication
   onMount(async () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
+    if (!isAuthenticated) {
       await goto('/login');
       return;
     }
@@ -33,6 +38,13 @@
 
     // Initialize chart
     initChart();
+  });
+
+  // Redirect if logged out using effect
+  $effect(() => {
+    if (!isAuthenticated) {
+      goto('/login');
+    }
   });
 
   async function loadDashboardData() {
@@ -100,8 +112,8 @@
   }
 
   async function handleLogout() {
-    localStorage.removeItem('auth_token');
-    await goto('/login');
+    auth.logout();
+    // Navigation handled by reactive statement above
   }
 </script>
 
@@ -113,12 +125,17 @@
         <div class="flex items-center">
           <span class="text-xl font-bold" style="color: rgb(109, 140, 248);">UnMoGrowP</span>
         </div>
-        <button
-          onclick={handleLogout}
-          class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          Logout
-        </button>
+        <div class="flex items-center space-x-4">
+          {#if user}
+            <span class="text-sm text-gray-600">Welcome, {user.name}</span>
+          {/if}
+          <button
+            onclick={handleLogout}
+            class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   </header>

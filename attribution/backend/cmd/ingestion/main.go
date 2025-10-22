@@ -30,7 +30,6 @@ type EventPayload struct {
 func main() {
 	// Create Fiber app with configuration for high performance
 	app := fiber.New(fiber.Config{
-		Prefork:       false, // Enable for production (process per CPU core)
 		CaseSensitive: true,
 		StrictRouting: false,
 		ServerHeader:  "UnMoGrowP",
