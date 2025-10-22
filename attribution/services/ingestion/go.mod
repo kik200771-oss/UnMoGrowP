@@ -5,6 +5,7 @@ go 1.25.3
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
 	github.com/gofiber/fiber/v3 v3.0.0-rc.2
+	github.com/prometheus/client_golang v1.17.0
 	github.com/redis/go-redis/v9 v9.14.1
 	github.com/segmentio/kafka-go v0.4.49
 )
