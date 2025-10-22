@@ -1,0 +1,47 @@
+# Global ownership
+* @your-org/platform-team
+
+# Documentation
+/docs/ @your-org/docs-team
+*.md @your-org/docs-team
+SECURITY.md @your-org/security-team
+
+# Frontend
+/apps/web-ui/ @your-org/frontend-team
+*.svelte @your-org/frontend-team
+*.ts @your-org/frontend-team @your-org/platform-team
+*.js @your-org/frontend-team @your-org/platform-team
+
+# API Gateway
+/apps/api-gateway/ @your-org/api-team
+/api/ @your-org/api-team
+
+# Backend Services
+/services/ @your-org/backend-team
+*.go @your-org/backend-team
+go.mod @your-org/backend-team
+go.sum @your-org/backend-team
+
+# Infrastructure
+/infra/ @your-org/devops-team
+docker-compose.yml @your-org/devops-team
+Dockerfile @your-org/devops-team
+*.k8s.yml @your-org/devops-team
+
+# CI/CD
+/.github/ @your-org/platform-team @your-org/devops-team
+.github/workflows/ @your-org/devops-team
+
+# Security sensitive files
+/database/ @your-org/database-team @your-org/security-team
+*.sql @your-org/database-team
+
+# Configuration
+*.json @your-org/platform-team
+*.yml @your-org/platform-team
+*.yaml @your-org/platform-team
+.env.example @your-org/platform-team @your-org/security-team
+
+# Tests
+/tests/ @your-org/platform-team
+*.test.* @your-org/platform-team

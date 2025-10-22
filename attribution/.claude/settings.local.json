@@ -48,7 +48,8 @@
       "Bash(node test-attribution-system.js:*)",
       "Bash(mv:*)",
       "Bash(mkdir:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []

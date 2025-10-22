@@ -2,7 +2,7 @@ version: 2
 updates:
   # Frontend dependencies (npm)
   - package-ecosystem: "npm"
-    directory: "/frontend"
+    directory: "/apps/web-ui"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -22,7 +22,7 @@ updates:
 
   # API dependencies (npm/bun)
   - package-ecosystem: "npm"
-    directory: "/api"
+    directory: "/apps/api-gateway"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -62,7 +62,7 @@ updates:
 
   # Backend dependencies (Go)
   - package-ecosystem: "gomod"
-    directory: "/backend"
+    directory: "/services/ingestion"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -103,7 +103,7 @@ updates:
 
   # Docker
   - package-ecosystem: "docker"
-    directory: "/config"
+    directory: "/infra/docker"
     schedule:
       interval: "weekly"
       day: "monday"
