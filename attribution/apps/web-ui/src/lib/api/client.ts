@@ -9,13 +9,18 @@
 import { browser } from '$app/environment';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = 'http://localhost:3007'; // Force port 3007 - the working API server with password reset
+const API_BASE_URL = 'http://localhost:8080'; // Redis-integrated Go API Gateway (v3.0.0-redis)
 
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
+  meta?: {
+    cache_hit?: boolean;
+    response_time?: string;
+    source?: string;
+  };
 }
 
 export interface LoginRequest {
@@ -40,9 +45,11 @@ export interface GoogleAuthRequest {
 }
 
 export interface DashboardStats {
-  totalEvents: number;
-  activeUsers: number;
-  revenue: number;
+  total_events: number;
+  active_users: number;
+  revenue_today: number;
+  conversions: number;
+  cache_enabled?: boolean;
 }
 
 export interface EventTrackRequest {
@@ -228,7 +235,7 @@ class ApiClient {
    * Get dashboard statistics
    */
   async getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
-    return this.request<DashboardStats>('/api/dashboard/stats');
+    return this.request<DashboardStats>('/api/v1/dashboard/stats');
   }
 
   /**
