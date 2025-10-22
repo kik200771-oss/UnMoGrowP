@@ -1,0 +1,46 @@
+version: '3.8'
+
+# UnMoGrowP Customer Onboarding System - Deployment Configuration
+# Week 1 Sprint: Customer Creation & Success Tracking
+
+services:
+  # Customer Success Tracker API
+  customer-success-tracker:
+    build:
+      context: ../services/metrics
+      dockerfile: Dockerfile
+    container_name: attribution-customer-success
+    hostname: customer-success
+    ports:
+      - "8084:8084"
+    environment:
+      PORT: 8084
+      POSTGRES_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass_pg}@postgres:5432/attribution?sslmode=disable
+      LOG_LEVEL: info
+      METRICS_ENABLED: "true"
+    volumes:
+      - customer_data:/root/pilot-customers
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8084/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+
+volumes:
+  customer_data:
+    driver: local
+
+networks:
+  attribution-net:
+    external: true

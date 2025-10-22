@@ -49,7 +49,16 @@
       "Bash(mv:*)",
       "Bash(mkdir:*)",
       "Bash(rm:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(chmod +x C:КОДИНГattributiontestingloadrun-load-test.sh)",
+      "Bash(chmod:*)",
+      "Bash(icacls \"C:\\КОДИНГ\\attribution\\infrastructure\\observability\\validate-monitoring.sh\" /grant Everyone:F)",
+      "Bash(ls -lah \"C:\\КОДИНГ\\attribution\\infrastructure\\observability\\grafana\\dashboards\"\" && echo \"---\" && ls -lah \"C:КОДИНГattributioninfrastructureobservabilityprometheusrules\"\")",
+      "Bash(docker ps:*)",
+      "Bash(where:*)",
+      "Bash(dir:*)",
+      "Bash(test:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
