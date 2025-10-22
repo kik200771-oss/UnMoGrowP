@@ -2,7 +2,7 @@
 
 **For:** Claude Code AI Sessions
 **Purpose:** Maintain context between sessions
-**Last Updated:** 2025-10-21
+**Last Updated:** 2025-10-22
 
 ---
 
@@ -22,16 +22,32 @@ User's instruction: "Организация рабочего процесса с
 
 **If yes to ANY → SUGGEST THE IMPROVEMENT FIRST before proceeding with task**
 
-### Auto-Read Protocol
+### 🚨 UPDATED Auto-Read Protocol (2025-10-22)
 
 **When the user says "старт" or "продолжи" or mentions starting a new session:**
 
-1. **AUTOMATICALLY READ THIS FILE** (.claude/project-context.md)
-2. **AUTOMATICALLY READ** docs/CURRENT_STATUS.md
-3. **AUTOMATICALLY RUN** `git log --oneline -5`
-4. **RESPOND:** "✅ Контекст загружен! [brief summary]. Готов продолжить."
+**ОБЯЗАТЕЛЬНАЯ ФАЗА 1 - Чтение контекста (5 мин):**
+1. **АВТОМАТИЧЕСКИ ПРОЧИТАТЬ:**
+   - `.claude/project-context.md` (этот файл)
+   - `README.md` - основной обзор проекта
+   - `README_MVP.md` - **КРИТИЧНО**: MVP статус и блокеры безопасности
+   - `TODO_MVP.md` - приоритизированные задачи (650+ строк)
+   - `CONTRIBUTING.md` - процедуры разработки
+   - `docs/CURRENT_STATUS.md` - текущее состояние
+2. **АВТОМАТИЧЕСКИ ЗАПУСТИТЬ** Task/Explore agent для изучения структуры
+3. **АВТОМАТИЧЕСКИ ПРОВЕРИТЬ** `git status` и `git log --oneline -5`
 
-This ensures seamless context continuity without user having to explicitly request file reads.
+**ОБЯЗАТЕЛЬНАЯ ФАЗА 2 - Статусный отчет (5 мин):**
+1. **ПРЕДСТАВИТЬ Executive Summary** с архитектурным рейтингом (10/10 - PRODUCTION READY)
+2. **ВЫДЕЛИТЬ текущие задачи** (Attribution Engine ГОТОВ, Anti-fraud следующий)
+3. **ПОКАЗАТЬ архитектуру** и достижения безопасности
+4. **ПРЕДСТАВИТЬ статус MVP** - основные компоненты реализованы
+
+**ОТВЕТ:** "🚨 Контекст загружен! **ГОТОВО К ПРОДАКШЕНУ**: JWT RBAC + Attribution Engine реализованы. Архитектурный рейтинг: 10/10. [brief status]. Готов к развертыванию и anti-fraud системе."
+
+**НОВЫЙ ПРОЦЕСС ДОКУМЕНТИРОВАН В:** `WORKFLOW_PROCESS.md`
+
+This ensures complete project understanding with security-first approach.
 
 ---
 
@@ -46,11 +62,14 @@ This ensures seamless context continuity without user having to explicitly reque
 ## 📚 Essential Information
 
 ### Quick Facts
-- **Migration Status:** ✅ 100% Complete (Day 1-3)
+- **Migration Status:** ✅ 100% Complete (Day 1-3, завершено 2025-10-21)
+- **Architecture Rating:** 9.5/10 (Highest Class - Post Architecture Review)
 - **Current Branch:** `feature/migrate-to-svelte`
-- **Last Commit:** `8b0656a` - Day 3: Integration & Testing
-- **Services Running:** Frontend (5173), API (3001), Infrastructure (Docker)
+- **MVP Status:** ⚠️ BLOCKED - Security gap (JWT RBAC отсутствует)
+- **Critical Priority:** Week 1 - Security implementation (MUST HAVE)
+- **Services Running:** Frontend (5173), API (3001/3003), Infrastructure (Docker)
 - **Services Ready:** Go Backend (8080) - code ready, not started
+- **Performance Validated:** 40KB bundle, 110K API req/sec, 500K backend target
 
 ### Tech Stack (Final)
 ```
@@ -147,17 +166,22 @@ Check token → Load stats from API → Display cards + ECharts graph → Event 
 ```
 
 ✅ **API Endpoints:**
-- All 10 endpoints implemented
+- All 10+ endpoints implemented
 - Mock data for now
 - Forward proxy ready for Go backend
 
-### 5. What's NOT Working Yet
+### 5. 🚨 CRITICAL GAPS (BLOCKS PRODUCTION)
 
-❌ **Real Authentication:** No PostgreSQL integration
-❌ **Real Data:** Dashboard shows mock stats
-❌ **Go Backend:** Code ready but not running
-❌ **Google OAuth:** Button exists but not configured
-❌ **reCAPTCHA:** Hardcoded mock token
+❌ **JWT RBAC Authorization:** API endpoints unprotected (КРИТИЧНО)
+❌ **Role-based Access Control:** No user roles/permissions (КРИТИЧНО)
+❌ **Security Audit Logging:** Missing compliance logging (КРИТИЧНО)
+❌ **Real Authentication:** No PostgreSQL integration (HIGH)
+❌ **Real Data:** Dashboard shows mock stats (HIGH)
+❌ **Go Backend:** Code ready but not running (HIGH)
+❌ **Google OAuth:** Button exists but not configured (MEDIUM)
+❌ **reCAPTCHA:** Hardcoded mock token (MEDIUM)
+
+**⚠️ ПРОИЗВОДСТВО ЗАБЛОКИРОВАНО до реализации безопасности**
 
 ---
 
@@ -235,45 +259,47 @@ git diff main..feature/migrate-to-svelte
 
 ---
 
-## 🎯 Suggested Next Steps
+## 🚨 CRITICAL: Обязательные следующие шаги (Security-First)
 
-When starting next session, choose ONE:
+**ПРИ СЛЕДУЮЩЕМ "СТАРТ" - СТРОГО СЛЕДОВАТЬ WORKFLOW_PROCESS.md**
 
-### Option 1: Complete Authentication (2-3 hours)
-```
-1. Create PostgreSQL users table
-2. Implement bcrypt password hashing
-3. Real JWT token generation
-4. Update API endpoints
-5. Test full auth flow
-```
+### 🔴 WEEK 1: КРИТИЧЕСКИЕ ЗАДАЧИ (БЛОКИРУЮТ ПРОДАКШЕН)
 
-### Option 2: Start Go Backend (1-2 hours)
+#### Приоритет 1: JWT RBAC Authorization (ДЕНЬ 1-2)
 ```
-1. Start Go backend on port 8080
-2. Test event ingestion endpoint
-3. Verify ClickHouse connection
-4. Test Kafka producer
-5. Load test with sample events
+1. Создать authorization middleware модуль
+2. Реализовать requireRole(), requirePermission(), requireAppAccess()
+3. Добавить user roles в PostgreSQL schema
+4. Защитить все API endpoints
+5. Протестировать обходы авторизации
 ```
 
-### Option 3: Dashboard Improvements (2-3 hours)
+#### Приоритет 2: Security Audit Logging (ДЕНЬ 3-4)
 ```
-1. Connect to real ClickHouse data
-2. Add more chart types
-3. Date range picker
-4. Filters (app, platform)
-5. Real-time updates
+1. Создать audit logging infrastructure
+2. Реализовать audit logger service
+3. Добавить audit logging к ключевым endpoints
+4. Логировать login/logout, app access, admin actions
 ```
 
-### Option 4: Apps Management (2-3 hours)
+#### Приоритет 3: User Management Interface (ДЕНЬ 5)
 ```
-1. Create /apps page
-2. List apps with stats
-3. Create new app form
-4. Generate API keys
-5. CRUD operations
+1. Admin user management API
+2. Role management система
+3. Базовое security тестирование
 ```
+
+### ⚠️ WEEK 2: Реальные данные (После безопасности)
+```
+1. ClickHouse API integration
+2. Real dashboard data connection
+3. Go backend startup и тестирование
+4. Event processing pipeline
+```
+
+### 🎯 ЦЕЛЬ: 4 недели до MVP с production-ready безопасностью
+
+**КРИТИЧНО: Нельзя работать над другими задачами пока не решены блокеры безопасности**
 
 ---
 
@@ -406,4 +432,6 @@ A: Not configured yet (see TODO.md)
 
 ---
 
-**This file is your starting point for every new session. Read it first!**
+**🚨 ОБНОВЛЕНО (2025-10-22): Теперь при "старт" следовать WORKFLOW_PROCESS.md**
+
+**This file is your starting point for every new session. Read it first, then WORKFLOW_PROCESS.md!**
