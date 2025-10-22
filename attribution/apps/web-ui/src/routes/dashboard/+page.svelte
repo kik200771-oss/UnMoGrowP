@@ -33,11 +33,8 @@
       return;
     }
 
-    // Fetch dashboard stats
-    await loadDashboardData();
-
-    // Initialize chart
-    initChart();
+    // Redirect to new app structure
+    await goto('/app/overview');
   });
 
   // Redirect if logged out using effect
