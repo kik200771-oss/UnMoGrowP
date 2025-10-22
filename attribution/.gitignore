@@ -89,6 +89,30 @@ temp/
 *.tmp
 
 # ========================================
+# SECURITY - NEVER COMMIT THESE FILES
+# ========================================
+# Prevent committing sensitive files (based on security audit)
+**/API_keys*/
+**/API_key*/
+**/*api*key*
+backup-*.bat
+backup-*.sh
+*-backup.*
+*.odt
+*.doc
+*.docx
+**/secrets/
+**/credentials/
+**/*.pem
+**/*.p12
+**/*.jks
+**/*.key
+**/*.crt
+**/.aws/
+**/.env.local
+**/.env.prod*
+
+# ========================================
 # LEGACY FILES (to be removed)
 # ========================================
 # These files are from old Next.js setup
