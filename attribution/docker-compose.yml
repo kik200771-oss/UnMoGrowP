@@ -19,7 +19,7 @@ services:
     environment:
       CLICKHOUSE_DB: attribution
       CLICKHOUSE_USER: attribution
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-attribution_secure_pass}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     volumes:
       - clickhouse_data:/var/lib/clickhouse/
@@ -54,7 +54,7 @@ services:
     environment:
       POSTGRES_DB: attribution
       POSTGRES_USER: attribution
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-attribution_secure_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -219,7 +219,7 @@ services:
       KAFKA_BROKERS: kafka:29092
       REDIS_URL: redis://redis:6379
       CLICKHOUSE_URL: http://clickhouse:8123
-      POSTGRES_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution
+      POSTGRES_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution
       LOG_LEVEL: info
       DEFAULT_ATTRIBUTION_MODEL: last_touch
       ATTRIBUTION_WINDOW_HOURS: 168  # 7 days
@@ -253,7 +253,7 @@ services:
       - "8080:8080"
     environment:
       PORT: 8080
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
@@ -287,7 +287,7 @@ services:
       - "8084:8084"
     environment:
       PORT: 8084
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
     depends_on:
@@ -319,7 +319,7 @@ services:
       - "3001:3001"
     environment:
       PORT: 3001
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       KAFKA_BROKERS: kafka:29092
@@ -357,7 +357,7 @@ services:
       - "8085:8085"
     environment:
       PORT: 8085
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
@@ -388,7 +388,7 @@ services:
       - "8086:8086"
     environment:
       PORT: 8086
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
@@ -419,7 +419,7 @@ services:
       - "8087:8087"
     environment:
       PORT: 8087
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
@@ -450,7 +450,7 @@ services:
       - "8088:8088"
     environment:
       PORT: 8088
-      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       CLICKHOUSE_URL: http://clickhouse:8123
       REDIS_URL: redis://redis:6379
       LOG_LEVEL: info
@@ -559,7 +559,7 @@ services:
       - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: false
     volumes:
       - grafana_data:/var/lib/grafana
@@ -657,6 +657,7 @@ volumes:
 # =============================================================================
 
 # Create .env file with:
-# CLICKHOUSE_PASSWORD=your_secure_clickhouse_password
-# POSTGRES_PASSWORD=your_secure_postgres_password
-# GRAFANA_PASSWORD=your_secure_grafana_password
+# КРИТИЧНО: Установите эти переменные в вашем .env файле!
+# CLICKHOUSE_PASSWORD=your_secure_clickhouse_password_HERE
+# POSTGRES_PASSWORD=your_secure_postgres_password_HERE
+# GRAFANA_PASSWORD=your_secure_grafana_password_HERE
