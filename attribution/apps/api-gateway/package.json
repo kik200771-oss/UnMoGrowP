@@ -9,7 +9,12 @@
     "start": "bun run index.ts",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
-    "test": "bun test"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:unit": "bun test --filter \"unit\"",
+    "test:integration": "bun test --filter \"integration\"",
+    "test:api": "bun test --filter \"api\""
   },
   "devDependencies": {
     "@trpc/client": "^11.6.0",

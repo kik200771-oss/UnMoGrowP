@@ -68,7 +68,11 @@
       "Bash(node:*)",
       "Bash(docker:*)",
       "Bash(pip --version:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(make help:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
