@@ -70,7 +70,7 @@ datasources:
       defaultDatabase: default
       username: default
     secureJsonData:
-      password: ''
+      password: '${CLICKHOUSE_PASSWORD}'
 
 # Notification channels (for alerts)
 notifiers:

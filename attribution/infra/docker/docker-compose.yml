@@ -20,7 +20,7 @@ services:
     environment:
       CLICKHOUSE_DB: analytics
       CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
     ulimits:
       nofile:
         soft: 262144
@@ -102,7 +102,7 @@ services:
     environment:
       POSTGRES_DB: unmogrowp
       POSTGRES_USER: unmogrowp
-      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -150,7 +150,7 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass dev_password_123
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     networks:

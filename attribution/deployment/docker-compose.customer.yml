@@ -15,7 +15,7 @@ services:
       - "8084:8084"
     environment:
       PORT: 8084
-      POSTGRES_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass_pg}@postgres:5432/attribution?sslmode=disable
+      POSTGRES_URL: postgres://attribution:${POSTGRES_PASSWORD}@postgres:5432/attribution?sslmode=disable
       LOG_LEVEL: info
       METRICS_ENABLED: "true"
     volumes:

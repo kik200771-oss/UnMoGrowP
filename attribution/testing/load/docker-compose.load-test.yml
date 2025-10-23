@@ -44,10 +44,10 @@ services:
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=loadtest123
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-loadtest_env_required}
       - DOCKER_INFLUXDB_INIT_ORG=unmogrowp
       - DOCKER_INFLUXDB_INIT_BUCKET=k6
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN:-loadtest_token_env_required}
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
@@ -69,7 +69,7 @@ services:
       - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=loadtest123
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-loadtest_grafana_env_required}
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
       - grafana_load_data:/var/lib/grafana
@@ -96,7 +96,7 @@ services:
     environment:
       - PLATFORM_URL=http://host.docker.internal:8080
       - INFLUX_URL=http://influxdb:8086
-      - INFLUX_TOKEN=my-super-secret-auth-token
+      - INFLUX_TOKEN=${INFLUXDB_ADMIN_TOKEN:-loadtest_token_env_required}
       - TEST_DURATION=1800  # 30 minutes
       - TARGET_RPS=1000000  # 1M requests per second
     volumes:
@@ -150,7 +150,7 @@ volumes:
 #    docker-compose -f docker-compose.load-test.yml --profile monitoring up -d
 #
 # 5. View results:
-#    - Grafana: http://localhost:3001 (admin/loadtest123)
-#    - InfluxDB: http://localhost:8086 (admin/loadtest123)
+#    - Grafana: http://localhost:3001 (admin/${GRAFANA_PASSWORD})
+#    - InfluxDB: http://localhost:8086 (admin/${INFLUXDB_PASSWORD})
 #
 # ============================================================================
