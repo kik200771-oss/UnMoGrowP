@@ -28,7 +28,7 @@ export class TenantAPIGateway {
   static async selectHealthyInstance() {
     console.log(`🎯 [STUB] Selecting healthy instance for load balancing`);
     // TODO: Implement load balancer for shared instances
-    return 'http://localhost:3007';
+    return process.env.TENANT_INSTANCE_URL || 'http://localhost:3007';
   }
 }
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -570,7 +571,10 @@ func (cst *CustomerSuccessTracker) Start(port string) error {
 }
 
 func main() {
-	dbURL := "postgres://attribution:attribution_secure_pass_pg@localhost:5432/attribution?sslmode=disable"
+	dbURL := os.Getenv("POSTGRES_URL")
+	if dbURL == "" {
+		log.Fatal("POSTGRES_URL environment variable is required")
+	}
 
 	tracker, err := NewCustomerSuccessTracker(dbURL)
 	if err != nil {

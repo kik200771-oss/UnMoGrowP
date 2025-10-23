@@ -27,7 +27,7 @@ const app = new Hono();
 // Middleware
 app.use('*', logger());
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+  origin: (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174,http://localhost:3000').split(','),
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
@@ -287,7 +287,8 @@ app.post('/api/auth/forgot-password', async (c) => {
 
     // Log for development (keep console logs for now)
     console.log(`Password reset token for ${body.email}: ${resetTokenInfo.token}`);
-    console.log(`Reset link: http://localhost:5173/reset-password?token=${resetTokenInfo.token}`);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    console.log(`Reset link: ${frontendUrl}/reset-password?token=${resetTokenInfo.token}`);
 
     if (emailResult.success) {
       console.log(`✅ Password reset email sent successfully (${emailResult.messageId})`);
@@ -500,7 +501,8 @@ app.post('/api/attribution/track', async (c) => {
 
   // Forward to Go backend event ingestion
   try {
-    const response = await fetch('http://localhost:8080/v1/events', {
+    const goBackendUrl = process.env.GO_BACKEND_URL || 'http://localhost:8080';
+    const response = await fetch(`${goBackendUrl}/v1/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -526,7 +528,8 @@ app.post('/api/attribution/batch', async (c) => {
 
   // Forward batch to Go backend
   try {
-    const response = await fetch('http://localhost:8080/v1/events/batch', {
+    const goBackendUrl = process.env.GO_BACKEND_URL || 'http://localhost:8080';
+    const response = await fetch(`${goBackendUrl}/v1/events/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -779,10 +782,11 @@ console.log(`   RPC: tRPC (type-safe)`);
 console.log(`   Port: ${port}`);
 console.log(`   Auth: PostgreSQL + bcrypt + JWT RBAC`);
 console.log(``);
+const hostUrl = process.env.API_HOST_URL || `http://localhost:${port}`;
 console.log(`📡 Endpoints:`);
-console.log(`   Health: http://localhost:${port}/health`);
-console.log(`   tRPC: http://localhost:${port}/trpc`);
-console.log(`   REST (legacy): http://localhost:${port}/api/*`);
+console.log(`   Health: ${hostUrl}/health`);
+console.log(`   tRPC: ${hostUrl}/trpc`);
+console.log(`   REST (legacy): ${hostUrl}/api/*`);
 console.log(``);
 
 export default {
