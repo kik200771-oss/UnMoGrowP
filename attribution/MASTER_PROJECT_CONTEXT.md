@@ -366,11 +366,13 @@ C:\КОДИНГ\attribution\
 │   ├── web-ui/                  # Svelte 5 frontend
 │   └── api-gateway/             # Bun + Hono API
 │
-├── backend/                     # Go services
-│   ├── cmd/ingestion/           # Event ingestion (10M/sec)
-│   ├── pkg/clickhouse/          # ClickHouse client
-│   ├── pkg/kafka/               # Kafka producer
-│   └── pkg/redis/               # Redis client
+├── services/                    # Go services
+│   ├── ingestion/               # Event ingestion (10M/sec)
+│   ├── attribution/             # Attribution engine
+│   └── metrics/                 # Customer success tracker
+│
+├── cmd/                         # Command line tools
+│   └── api-gateway/             # Go API gateway variants
 │
 ├── ml-services/                 # ML/AI services
 │   └── analytics-api/           # FastAPI with ML models
@@ -626,7 +628,7 @@ git log --oneline -5
 docker-compose up -d                          # Infrastructure
 cd apps/web-ui && npm run dev                 # Frontend (5173)
 cd apps/api-gateway && PORT=3001 bun run dev  # API (3001)
-cd backend/cmd/ingestion && go run main.go    # Backend (8080)
+cd services/ingestion && go run main.go    # Backend (8080)
 cd ml-services/analytics-api && python main.py # ML API (8000)
 
 # 4. Verify everything is running
@@ -659,7 +661,7 @@ cat WEEK_4_DAY_2_EXECUTION_REPORT.md
 # Development
 npm run dev           # Start frontend
 bun run dev          # Start API
-go run main.go       # Start backend
+cd services/ingestion && go run main.go  # Start backend
 python main.py       # Start ML API
 
 # Testing
@@ -711,8 +713,8 @@ kubectl get pods           # K8s status
 ### 📁 Code Entry Points
 
 14. **apps/web-ui/src/routes/+page.svelte** - главная страница frontend
-15. **apps/api-gateway/src/index.ts** - main API server
-16. **backend/cmd/ingestion/main.go** - Go backend entry point
+15. **apps/api-gateway/index.ts** - main API server
+16. **services/ingestion/main.go** - Go backend entry point
 17. **ml-services/analytics-api/main.py** - ML API entry point
 
 ### ⚙️ Configuration
