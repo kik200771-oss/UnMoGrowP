@@ -9,7 +9,9 @@
 import { browser } from '$app/environment';
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = 'http://localhost:8080'; // Redis-integrated Go API Gateway (v3.0.0-redis)
+const API_BASE_URL = typeof window !== 'undefined'
+  ? (window.location.origin.includes('localhost') ? 'http://localhost:8080' : window.location.origin)
+  : 'http://localhost:8080'; // Redis-integrated Go API Gateway (v3.0.0-redis)
 
 export interface ApiResponse<T = any> {
   success: boolean;

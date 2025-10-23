@@ -11,6 +11,11 @@
   import MetricsOverview from '$lib/components/dashboard/MetricsOverview.svelte';
   import CustomersTable from '$lib/components/dashboard/CustomersTable.svelte';
 
+  // Configurable API URL
+  const API_URL = typeof window !== 'undefined'
+    ? (window.location.origin.includes('localhost') ? 'http://localhost:8080' : window.location.origin)
+    : 'http://localhost:8080';
+
   // State using Svelte 5 runes
   let isLoading = $state(true);
   let error = $state<string | null>(null);
@@ -50,13 +55,13 @@
       error = null;
 
       // Load system health
-      const healthResponse = await fetch('http://localhost:8080/health');
+      const healthResponse = await fetch(`${API_URL}/health`);
       if (healthResponse.ok) {
         systemHealth = await healthResponse.json();
       }
 
       // Load detailed metrics
-      const metricsResponse = await fetch('http://localhost:8080/metrics/detailed');
+      const metricsResponse = await fetch(`${API_URL}/metrics/detailed`);
       if (metricsResponse.ok) {
         detailedMetrics = await metricsResponse.json();
         if (detailedMetrics.success) {
@@ -74,7 +79,7 @@
 
   async function loadLiveMetrics() {
     try {
-      const response = await fetch('http://localhost:8080/metrics');
+      const response = await fetch(`${API_URL}/metrics`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -308,7 +313,7 @@
         <a href="/login">Login</a>
         <a href="/register">Sign Up</a>
         <a href="/dashboard-redis">Admin Dashboard</a>
-        <a href="http://localhost:8080/metrics" target="_blank">Raw Metrics API</a>
+        <a href="{API_URL}/metrics" target="_blank">Raw Metrics API</a>
       </div>
     </div>
   </footer>
