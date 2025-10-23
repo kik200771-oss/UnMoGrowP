@@ -5,7 +5,11 @@
 	"/about": [
 		"src/routes/about/+page.ts"
 	],
+	"/app-dashboard": [],
+	"/app/overview": [],
+	"/dashboard-redis": [],
 	"/dashboard": [],
+	"/demo": [],
 	"/forgot-password": [],
 	"/login": [],
 	"/register": [],

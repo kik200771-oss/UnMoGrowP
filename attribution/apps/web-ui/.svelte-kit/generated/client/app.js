@@ -11,7 +11,11 @@ export const nodes = [
 	() => import('./nodes/7'),
 	() => import('./nodes/8'),
 	() => import('./nodes/9'),
-	() => import('./nodes/10')
+	() => import('./nodes/10'),
+	() => import('./nodes/11'),
+	() => import('./nodes/12'),
+	() => import('./nodes/13'),
+	() => import('./nodes/14')
 ];
 
 export const server_loads = [];
@@ -19,13 +23,17 @@ export const server_loads = [];
 export const dictionary = {
 		"/": [2],
 		"/about": [3],
-		"/dashboard": [4],
-		"/forgot-password": [5],
-		"/login": [6],
-		"/register": [7],
-		"/reset-password": [8],
-		"/sverdle": [~9],
-		"/sverdle/how-to-play": [10]
+		"/app-dashboard": [5],
+		"/app/overview": [4],
+		"/dashboard-redis": [7],
+		"/dashboard": [6],
+		"/demo": [8],
+		"/forgot-password": [9],
+		"/login": [10],
+		"/register": [11],
+		"/reset-password": [12],
+		"/sverdle": [~13],
+		"/sverdle/how-to-play": [14]
 	};
 
 export const hooks = {

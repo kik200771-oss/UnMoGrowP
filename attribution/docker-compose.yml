@@ -169,8 +169,8 @@ services:
   # Event Ingestion Service - High-performance event collection
   ingestion-service:
     build:
-      context: ./services/ingestion
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/ingestion/Dockerfile
     container_name: attribution-ingestion
     hostname: ingestion
     ports:
@@ -206,8 +206,8 @@ services:
   # Attribution Engine Service - Multi-model attribution calculation
   attribution-service:
     build:
-      context: ./services/attribution
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/attribution/Dockerfile
     container_name: attribution-attribution
     hostname: attribution
     ports:
@@ -241,6 +241,284 @@ services:
           memory: 2G
           cpus: '2'
       replicas: 2
+
+  # API Gateway (Go) - Main entry point
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/api-gateway/Dockerfile
+    container_name: attribution-api-gateway
+    hostname: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      LOG_LEVEL: info
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+
+  # Metrics Service - Customer success tracking
+  metrics-service:
+    build:
+      context: .
+      dockerfile: services/metrics/Dockerfile
+    container_name: attribution-metrics
+    hostname: metrics
+    ports:
+      - "8084:8084"
+    environment:
+      PORT: 8084
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+
+  # =============================================================================
+  # TYPESCRIPT/BUN SERVICES
+  # =============================================================================
+
+  # API Gateway v2 (TypeScript/Bun) - Advanced API with tRPC
+  api-gateway-v2:
+    build:
+      context: .
+      dockerfile: apps/api-gateway/Dockerfile
+    container_name: attribution-api-gateway-v2
+    hostname: api-gateway-v2
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      KAFKA_BROKERS: kafka:29092
+      LOG_LEVEL: info
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+
+  # =============================================================================
+  # ML SERVICES (PYTHON)
+  # =============================================================================
+
+  # Analytics API - ML-powered analytics
+  analytics-api:
+    build:
+      context: .
+      dockerfile: ml-services/analytics-api/Dockerfile
+    container_name: attribution-analytics-api
+    hostname: analytics-api
+    ports:
+      - "8085:8085"
+    environment:
+      PORT: 8085
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+
+  # Attribution ML - Advanced ML attribution models
+  attribution-ml:
+    build:
+      context: .
+      dockerfile: ml-services/attribution-ml/Dockerfile
+    container_name: attribution-ml-service
+    hostname: attribution-ml
+    ports:
+      - "8086:8086"
+    environment:
+      PORT: 8086
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+
+  # Fraud Detection - ML-powered fraud detection
+  fraud-detection:
+    build:
+      context: .
+      dockerfile: ml-services/fraud-detection/Dockerfile
+    container_name: attribution-fraud-detection
+    hostname: fraud-detection
+    ports:
+      - "8087:8087"
+    environment:
+      PORT: 8087
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+
+  # LTV Prediction - Customer lifetime value prediction
+  ltv-prediction:
+    build:
+      context: .
+      dockerfile: ml-services/ltv-prediction/Dockerfile
+    container_name: attribution-ltv-prediction
+    hostname: ltv-prediction
+    ports:
+      - "8088:8088"
+    environment:
+      PORT: 8088
+      DATABASE_URL: postgres://attribution:${POSTGRES_PASSWORD:-attribution_secure_pass}@postgres:5432/attribution?sslmode=disable
+      CLICKHOUSE_URL: http://clickhouse:8123
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2'
+
+  # =============================================================================
+  # FRONTEND SERVICES
+  # =============================================================================
+
+  # Frontend (New) - Production Svelte 5 with Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: attribution-frontend
+    hostname: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      API_URL: http://api-gateway:8080
+      WS_URL: ws://api-gateway:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+  # Web UI (Legacy) - Legacy Svelte frontend
+  web-ui:
+    build:
+      context: .
+      dockerfile: apps/web-ui/Dockerfile
+    container_name: attribution-web-ui
+    hostname: web-ui
+    ports:
+      - "3002:3000"
+    environment:
+      API_URL: http://api-gateway:8080
+      WS_URL: ws://api-gateway:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - attribution-net
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
 
   # =============================================================================
   # MONITORING & OBSERVABILITY
