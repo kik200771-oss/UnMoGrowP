@@ -82,7 +82,17 @@
       "Bash(git checkout:*)",
       "Bash(winget install:*)",
       "Bash(powershell -Command \"try { winget install GitHub.cli --accept-package-agreements --accept-source-agreements; Write-Host ''GitHub CLI installed successfully'' } catch { Write-Host ''Failed to install via winget, trying chocolatey...''; if (!(Get-Command choco -ErrorAction SilentlyContinue)) { Write-Host ''Installing Chocolatey first...''; Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1'')) }; choco install gh -y }\")",
-      "Bash(start https://github.com/kik200771-oss/UnMoGrowP)"
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP)",
+      "Bash(powershell -Command \"try { winget install GitHub.cli --accept-package-agreements --accept-source-agreements -h; Write-Host ''✅ GitHub CLI installation started via winget'' } catch { Write-Host ''⚠️ winget failed, trying alternative method...''; choco install gh -y 2>null || Write-Host ''❌ Please install GitHub CLI manually'' }\")",
+      "Bash(powershell -Command \"winget install GitHub.cli --accept-package-agreements --accept-source-agreements\")",
+      "Bash(powershell:*)",
+      "Bash(gh --version:*)",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP/compare/main...feature/migrate-to-svelte)",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP/issues/new/choose)",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP/settings/branches)",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP/settings)",
+      "Bash(sudo dd:*)",
+      "Bash(cmd /c ACTIVATE_GITHUB.bat)"
     ],
     "deny": [],
     "ask": []
