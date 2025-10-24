@@ -171,71 +171,33 @@ func NewCustomerSuccessTracker(dbURL string) (*CustomerSuccessTracker, error) {
 }
 
 func (cst *CustomerSuccessTracker) initDatabase() error {
-	schema := `
-	CREATE TABLE IF NOT EXISTS customer_metrics (
-		customer_id VARCHAR(50) PRIMARY KEY,
-		company_name VARCHAR(200) NOT NULL,
-		pilot_start_date TIMESTAMP NOT NULL,
-		current_phase VARCHAR(20) NOT NULL DEFAULT 'discovery',
+	// NOTE: Database schemas are now managed via SQL files in database/ directory
+	// and automatically loaded via Docker Compose initialization.
+	// See: database/customer-success-schema.sql for complete schema definition.
 
-		-- Technical Metrics
-		attribution_accuracy DECIMAL(5,2) DEFAULT 0,
-		avg_api_latency DECIMAL(8,2) DEFAULT 0,
-		p95_api_latency DECIMAL(8,2) DEFAULT 0,
-		system_uptime DECIMAL(5,2) DEFAULT 0,
-		error_rate DECIMAL(5,4) DEFAULT 0,
+	// Verify that required tables exist and are accessible
+	requiredTables := []string{"customer_metrics", "weekly_summaries"}
 
-		-- Business Metrics
-		cost_savings_percent DECIMAL(5,2) DEFAULT 0,
-		time_savings_percent DECIMAL(5,2) DEFAULT 0,
-		accuracy_improvement DECIMAL(5,2) DEFAULT 0,
-		productivity_gain DECIMAL(5,2) DEFAULT 0,
+	for _, table := range requiredTables {
+		query := `SELECT 1 FROM information_schema.tables WHERE table_name = $1 LIMIT 1`
+		var exists int
+		err := cst.db.QueryRow(query, table).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("required table '%s' not found - ensure database/customer-success-schema.sql is loaded: %v", table, err)
+		}
+	}
 
-		-- Volume Metrics
-		daily_event_volume BIGINT DEFAULT 0,
-		peak_events_per_second BIGINT DEFAULT 0,
-		total_events_processed BIGINT DEFAULT 0,
+	// Verify database connection with a simple query
+	var dbTime time.Time
+	err := cst.db.QueryRow("SELECT CURRENT_TIMESTAMP").Scan(&dbTime)
+	if err != nil {
+		return fmt.Errorf("database connection test failed: %v", err)
+	}
 
-		-- Satisfaction Metrics
-		customer_satisfaction DECIMAL(5,2) DEFAULT 0,
-		nps INTEGER DEFAULT 0,
-		feedback_score DECIMAL(5,2) DEFAULT 0,
+	log.Printf("Customer Success Tracker initialized successfully at %v", dbTime)
+	log.Printf("Required tables verified: %v", requiredTables)
 
-		-- Integration Metrics
-		integration_days INTEGER DEFAULT 0,
-		go_live_date TIMESTAMP,
-		support_tickets INTEGER DEFAULT 0,
-
-		-- Success Flags
-		technical_success BOOLEAN DEFAULT FALSE,
-		business_success BOOLEAN DEFAULT FALSE,
-		overall_success BOOLEAN DEFAULT FALSE,
-
-		last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-		CONSTRAINT valid_phase CHECK (current_phase IN ('discovery', 'setup', 'launch')),
-		CONSTRAINT valid_satisfaction CHECK (customer_satisfaction >= 0 AND customer_satisfaction <= 100),
-		CONSTRAINT valid_accuracy CHECK (attribution_accuracy >= 0 AND attribution_accuracy <= 100)
-	);
-
-	CREATE INDEX IF NOT EXISTS idx_customer_metrics_phase ON customer_metrics(current_phase);
-	CREATE INDEX IF NOT EXISTS idx_customer_metrics_success ON customer_metrics(overall_success);
-	CREATE INDEX IF NOT EXISTS idx_customer_metrics_updated ON customer_metrics(last_updated);
-
-	-- Weekly summaries table
-	CREATE TABLE IF NOT EXISTS weekly_summaries (
-		week INTEGER NOT NULL,
-		start_date DATE NOT NULL,
-		end_date DATE NOT NULL,
-		summary_data JSONB NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-		PRIMARY KEY (week, start_date)
-	);
-	`
-
-	_, err := cst.db.Exec(schema)
-	return err
+	return nil
 }
 
 func (cst *CustomerSuccessTracker) setupRoutes() {
