@@ -13,6 +13,30 @@ data:
       url: http://prometheus:9090
       isDefault: true
       editable: true
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki:3100
+      editable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-providers
+  namespace: attribution-platform
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'ml-dashboards'
+      orgId: 1
+      folder: 'ML Services'
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 10
+      allowUiUpdates: true
+      options:
+        path: /var/lib/grafana/dashboards
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -52,12 +76,22 @@ spec:
         volumeMounts:
         - name: datasources
           mountPath: /etc/grafana/provisioning/datasources
+        - name: dashboard-providers
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /var/lib/grafana/dashboards
         - name: storage
           mountPath: /var/lib/grafana
       volumes:
       - name: datasources
         configMap:
           name: grafana-datasources
+      - name: dashboard-providers
+        configMap:
+          name: grafana-dashboard-providers
+      - name: dashboards
+        configMap:
+          name: grafana-dashboards
       - name: storage
         persistentVolumeClaim:
           claimName: grafana-storage

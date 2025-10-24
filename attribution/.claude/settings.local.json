@@ -72,7 +72,10 @@
       "Bash(make help:*)",
       "Bash(python -m pytest:*)",
       "Bash(pip install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(for service in attribution-ml fraud-detection ltv-prediction)",
+      "Bash(do mkdir -p \"$service\"/{models,data,utils,config,schemas,tests})",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

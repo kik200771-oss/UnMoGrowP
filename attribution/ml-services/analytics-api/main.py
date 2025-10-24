@@ -14,14 +14,28 @@ Date: 2025-10-22
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse, Response
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import asyncio
 import logging
 from prometheus_client import Counter, Histogram, generate_latest
 from prometheus_client import CONTENT_TYPE_LATEST
+
+# Import ML models
+from models import ConversionPredictor, RevenuePredictor, ChurnPredictor
+
+# Import schemas
+from schemas import (
+    ConversionPredictionRequest,
+    ConversionPredictionResponse,
+    RevenuePredictionRequest,
+    RevenuePredictionResponse,
+    ChurnPredictionRequest,
+    ChurnPredictionResponse,
+    InsightRequest,
+    Insight
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -50,161 +64,7 @@ ml_predictions = Counter('ml_predictions_total', 'Total ML predictions', ['model
 ml_latency = Histogram('ml_prediction_latency_seconds', 'ML prediction latency')
 api_requests = Counter('api_requests_total', 'Total API requests', ['endpoint', 'method'])
 
-# ============================================================================
-# Data Models
-# ============================================================================
 
-class ConversionPredictionRequest(BaseModel):
-    user_id: str
-    touchpoints: List[Dict[str, Any]]
-    user_features: Dict[str, Any] = Field(default_factory=dict)
-
-class ConversionPredictionResponse(BaseModel):
-    user_id: str
-    conversion_probability: float
-    confidence: float
-    contributing_factors: List[Dict[str, Any]]
-    recommendation: str
-
-class RevenuePredictionRequest(BaseModel):
-    campaign_id: str
-    historical_data: Dict[str, Any]
-    budget: float
-    duration_days: int
-
-class RevenuePredictionResponse(BaseModel):
-    campaign_id: str
-    predicted_revenue: float
-    confidence_interval: Dict[str, float]
-    roi_estimate: float
-    risk_factors: List[str]
-
-class ChurnPredictionRequest(BaseModel):
-    user_id: str
-    engagement_metrics: Dict[str, Any]
-    days_window: int = 30
-
-class ChurnPredictionResponse(BaseModel):
-    user_id: str
-    churn_probability: float
-    risk_level: str  # low, medium, high
-    churn_factors: List[Dict[str, Any]]
-    retention_recommendations: List[str]
-
-class InsightRequest(BaseModel):
-    organization_id: str
-    date_range: Dict[str, str]
-    metrics: List[str] = Field(default_factory=lambda: ["all"])
-
-class Insight(BaseModel):
-    id: str
-    title: str
-    description: str
-    category: str  # performance, opportunity, alert
-    priority: str  # low, medium, high, critical
-    impact_score: float
-    actionable: bool
-    recommendations: List[str]
-    created_at: datetime
-
-# ============================================================================
-# ML Models (Placeholders - would be real trained models)
-# ============================================================================
-
-class ConversionPredictor:
-    """XGBoost-based Conversion Probability Predictor"""
-
-    def __init__(self):
-        self.model = None  # Would load trained XGBoost model
-        self.features = [
-            'touchpoint_count', 'time_since_first_touch', 'channel_diversity',
-            'engagement_score', 'page_views', 'session_duration',
-            'bounce_rate', 'device_type', 'traffic_source', 'geography'
-        ]
-
-    async def predict(self, request: ConversionPredictionRequest) -> ConversionPredictionResponse:
-        """Predict conversion probability"""
-        # Mock prediction - replace with actual model inference
-        probability = 0.67  # Would be model.predict_proba()
-
-        contributing_factors = [
-            {"factor": "High engagement score", "weight": 0.35},
-            {"factor": "Multiple touchpoints", "weight": 0.28},
-            {"factor": "Recent activity", "weight": 0.22},
-            {"factor": "Quality traffic source", "weight": 0.15}
-        ]
-
-        recommendation = "High conversion likelihood - prioritize this user for targeted campaigns"
-        if probability < 0.3:
-            recommendation = "Low conversion likelihood - consider re-engagement campaigns"
-        elif probability < 0.6:
-            recommendation = "Medium conversion likelihood - nurture with relevant content"
-
-        return ConversionPredictionResponse(
-            user_id=request.user_id,
-            conversion_probability=probability,
-            confidence=0.89,
-            contributing_factors=contributing_factors,
-            recommendation=recommendation
-        )
-
-class RevenuePredictor:
-    """Random Forest-based Revenue Attribution Predictor"""
-
-    def __init__(self):
-        self.model = None  # Would load trained Random Forest model
-
-    async def predict(self, request: RevenuePredictionRequest) -> RevenuePredictionResponse:
-        """Predict campaign revenue"""
-        # Mock prediction - replace with actual model inference
-        predicted_revenue = request.budget * 2.8  # Would be model.predict()
-
-        return RevenuePredictionResponse(
-            campaign_id=request.campaign_id,
-            predicted_revenue=predicted_revenue,
-            confidence_interval={"lower": predicted_revenue * 0.85, "upper": predicted_revenue * 1.15},
-            roi_estimate=180.0,  # 180% ROI
-            risk_factors=["Market volatility", "Seasonal trends"]
-        )
-
-class ChurnPredictor:
-    """LightGBM-based Churn Risk Predictor"""
-
-    def __init__(self):
-        self.model = None  # Would load trained LightGBM model
-        self.thresholds = {"low": 0.2, "medium": 0.5, "high": 1.0}
-
-    async def predict(self, request: ChurnPredictionRequest) -> ChurnPredictionResponse:
-        """Predict churn probability"""
-        # Mock prediction - replace with actual model inference
-        churn_prob = 0.34  # Would be model.predict_proba()
-
-        risk_level = "low"
-        if churn_prob >= 0.5:
-            risk_level = "high"
-        elif churn_prob >= 0.2:
-            risk_level = "medium"
-
-        churn_factors = [
-            {"factor": "Decreased engagement", "impact": 0.45},
-            {"factor": "Reduced session frequency", "impact": 0.30},
-            {"factor": "No recent purchases", "impact": 0.25}
-        ]
-
-        recommendations = [
-            "Send personalized re-engagement email",
-            "Offer exclusive discount or incentive",
-            "Provide value-added content",
-            "Schedule customer success outreach"
-        ]
-
-        return ChurnPredictionResponse(
-            user_id=request.user_id,
-            churn_probability=churn_prob,
-            risk_level=risk_level,
-            churn_factors=churn_factors,
-            retention_recommendations=recommendations
-        )
 
 # Initialize ML Models
 conversion_predictor = ConversionPredictor()
