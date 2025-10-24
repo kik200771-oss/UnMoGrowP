@@ -79,7 +79,10 @@
       "Bash(gh repo view:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(winget install:*)",
+      "Bash(powershell -Command \"try { winget install GitHub.cli --accept-package-agreements --accept-source-agreements; Write-Host ''GitHub CLI installed successfully'' } catch { Write-Host ''Failed to install via winget, trying chocolatey...''; if (!(Get-Command choco -ErrorAction SilentlyContinue)) { Write-Host ''Installing Chocolatey first...''; Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(''https://community.chocolatey.org/install.ps1'')) }; choco install gh -y }\")",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP)"
     ],
     "deny": [],
     "ask": []
