@@ -76,7 +76,10 @@
       "Bash(for service in attribution-ml fraud-detection ltv-prediction)",
       "Bash(do mkdir -p \"$service\"/{models,data,utils,config,schemas,tests})",
       "Bash(xargs:*)",
-      "Bash(gh repo view:*)"
+      "Bash(gh repo view:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
