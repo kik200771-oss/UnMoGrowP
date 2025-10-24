@@ -75,7 +75,8 @@
       "Bash(python:*)",
       "Bash(for service in attribution-ml fraud-detection ltv-prediction)",
       "Bash(do mkdir -p \"$service\"/{models,data,utils,config,schemas,tests})",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(gh repo view:*)"
     ],
     "deny": [],
     "ask": []
