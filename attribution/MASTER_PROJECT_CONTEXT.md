@@ -922,6 +922,346 @@ POST /api/ltv/forecast-revenue # Прогноз выручки
 
 ---
 
+## 📊 МОНИТОРИНГ И ЛОГИРОВАНИЕ
+
+**Статус:** ✅ **PRODUCTION-READY MONITORING STACK** (2025-10-24)
+
+### 🎯 Обзор Системы Мониторинга
+
+Комплексная система мониторинга и логирования для ML-платформы с использованием современного стека:
+- **Prometheus** - сбор метрик
+- **Grafana** - визуализация и дашборды
+- **Loki** - централизованное логирование
+- **AlertManager** - управление алертами
+- **Promtail** - агрегация логов
+- **Node Exporter** - системные метрики
+- **cAdvisor** - контейнер метрики
+
+### 🏗️ Архитектура Мониторинга
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   ML Services   │    │  Infrastructure │    │   Monitoring    │
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ Analytics:8091  │───▶│ Prometheus:9090 │───▶│ Grafana:3000    │
+│ Attribution:8086│    │ Loki:3100       │    │ Dashboards      │
+│ Fraud Det:8087  │    │ AlertMgr:9093   │    │ Alerts          │
+│ LTV Pred:8088   │    │ Node Exp:9100   │    │ Notifications   │
+│ API Gateway:3001│    │ cAdvisor:8080   │    │ Reports         │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### 🎯 Мониторируемые Компоненты
+
+| Сервис | Порт | Метрики | Статус |
+|--------|------|---------|--------|
+| **ML Analytics API** | 8091 | Predictions, latency, model usage | ✅ Ready |
+| **Attribution ML** | 8086 | Attribution calculations, models | ✅ Ready |
+| **Fraud Detection** | 8087 | Fraud scores, detection rates | ✅ Ready |
+| **LTV Prediction** | 8088 | Customer segments, value predictions | ✅ Ready |
+| **API Gateway** | 3001 | Request rates, auth, errors | ✅ Ready |
+| **Go Backend** | 8080 | Event processing, throughput | ✅ Ready |
+| **Infrastructure** | - | CPU, Memory, Disk, Network | ✅ Ready |
+
+### 📈 Мониторинг Компоненты
+
+| Компонент | Порт | Назначение | URL | Статус |
+|-----------|------|------------|-----|--------|
+| **Prometheus** | 9090 | Сбор метрик | http://localhost:9090 | ✅ Ready |
+| **Grafana** | 3000 | Визуализация | http://localhost:3000 | ✅ Ready |
+| **Loki** | 3100 | Агрегация логов | http://localhost:3100 | ✅ Ready |
+| **AlertManager** | 9093 | Управление алертами | http://localhost:9093 | ✅ Ready |
+| **Node Exporter** | 9100 | Системные метрики | http://localhost:9100 | ✅ Ready |
+| **cAdvisor** | 8080 | Контейнер метрики | http://localhost:8080 | ✅ Ready |
+
+### 📊 Grafana Дашборды
+
+#### 🤖 ML Services Overview Dashboard
+**URL:** http://localhost:3000/d/ml-overview
+
+**Ключевые метрики:**
+- Service health status (UP/DOWN)
+- Predictions per minute по всем моделям
+- API response times (P50, P95, P99)
+- Error rates и success rates
+- Request distribution по сервисам
+
+#### ⚡ ML Performance Dashboard
+**URL:** http://localhost:3000/d/ml-performance
+
+**Performance метрики:**
+- Latency heatmaps для всех ML моделей
+- Throughput по типам моделей
+- Resource utilization (CPU/Memory)
+- Model-specific performance metrics
+- Query performance и optimization
+
+#### 💼 Business Metrics Dashboard
+**URL:** http://localhost:3000/d/business-metrics
+
+**Бизнес-метрики:**
+- Fraud detection results и trends
+- Attribution model usage patterns
+- LTV segments distribution
+- Revenue impact tracking
+- Customer behavior analytics
+
+### 🚨 Интеллектуальные Алерты
+
+#### Критичные ML Алерты
+
+**ML Service Down**
+```yaml
+Alert: MLServiceDown
+Condition: up{job=~"ml-.*"} == 0
+Duration: > 1 minute
+Severity: critical
+Action: Immediate notification
+```
+
+**High Prediction Latency**
+```yaml
+Alert: HighMLPredictionLatency
+Condition: histogram_quantile(0.95, ml_prediction_latency_seconds_bucket) > 2
+Duration: > 2 minutes
+Severity: warning
+Action: Performance team notification
+```
+
+**High Fraud Detection Rate**
+```yaml
+Alert: HighFraudDetectionRate
+Condition: fraud_detections_total{result="high"} > 100
+Duration: > 5 minutes
+Severity: critical
+Action: Security team immediate notification
+```
+
+**High Error Rate**
+```yaml
+Alert: HighMLErrorRate
+Condition: rate(api_requests_total{status=~"5.."}[5m]) > 0.05
+Duration: > 2 minutes
+Severity: warning
+Action: Development team notification
+```
+
+#### Бизнес-логика Алерты
+
+**Attribution Model Anomaly**
+```yaml
+Alert: AttributionModelAnomaly
+Condition: attribution_calculations_total deviation > 3σ
+Duration: > 10 minutes
+Severity: warning
+Action: Data science team notification
+```
+
+**LTV Prediction Drift**
+```yaml
+Alert: LTVPredictionDrift
+Condition: ltv_prediction_accuracy < 0.85
+Duration: > 15 minutes
+Severity: warning
+Action: ML model review required
+```
+
+### 📋 Специализированные Метрики
+
+#### Analytics API (8091)
+```prometheus
+# ML Predictions
+ml_predictions_total{model="conversion|revenue|churn"}
+ml_prediction_latency_seconds_bucket
+ml_model_accuracy_score
+
+# API Performance
+api_requests_total{endpoint, method, status}
+api_request_duration_seconds_bucket
+api_concurrent_requests
+```
+
+#### Attribution ML (8086)
+```prometheus
+# Attribution Calculations
+attribution_calculations_total{model="first_touch|last_touch|linear|time_decay|position_based"}
+attribution_calculation_latency_seconds_bucket
+attribution_touchpoints_processed_total
+
+# Business Metrics
+attribution_conversion_value_total
+attribution_model_comparison_requests_total
+```
+
+#### Fraud Detection (8087)
+```prometheus
+# Fraud Detection
+fraud_detections_total{result="low|medium|high"}
+fraud_detection_latency_seconds_bucket
+fraud_patterns_detected_total
+
+# Security Metrics
+fraud_risk_score_histogram
+fraud_blocked_transactions_total
+fraud_false_positive_rate
+```
+
+#### LTV Prediction (8088)
+```prometheus
+# LTV Predictions
+ltv_predictions_total{segment="low|medium|high|premium"}
+ltv_prediction_latency_seconds_bucket
+ltv_prediction_accuracy_score
+
+# Customer Analytics
+customer_segments_distribution
+customer_retention_rate
+customer_lifetime_value_histogram
+```
+
+### 🔍 Централизованное Логирование
+
+#### Loki Configuration
+- **Retention:** 30 дней для production logs
+- **Ingestion Rate:** 32MB/sec с burst до 64MB/sec
+- **Storage:** Filesystem с планами на S3
+- **Querying:** LogQL для advanced log analysis
+
+#### Структурированные Логи
+```json
+{
+  "timestamp": "2025-10-24T10:30:00.123Z",
+  "level": "INFO",
+  "service": "ml-analytics",
+  "message": "Prediction completed",
+  "model": "conversion",
+  "prediction_id": "pred_123456",
+  "user_id": "user_789",
+  "latency_ms": 45,
+  "accuracy": 0.92,
+  "trace_id": "trace_abc123"
+}
+```
+
+#### Полезные LogQL Queries
+```logql
+# Ошибки ML сервисов
+{service=~"ml-analytics|attribution-ml|fraud-detection|ltv-prediction"} |= "ERROR"
+
+# Медленные предсказания
+{service="ml-analytics"} | json | latency_ms > 1000
+
+# High-risk fraud alerts
+{service="fraud-detection"} | json | risk_level="high"
+
+# Trace по ID
+{service=~".*"} | json | trace_id="your-trace-id"
+```
+
+### 🔧 Deployment Options
+
+#### 1. Docker Compose (Development)
+```bash
+cd deployment/monitoring
+./start-monitoring.sh
+
+# Automatic setup:
+# - Port validation
+# - Config verification
+# - Health checks
+# - Access URLs display
+```
+
+#### 2. Kubernetes (Production)
+```bash
+kubectl apply -f deployment/kubernetes/monitoring/
+
+# Includes:
+# - Auto-scaling configuration
+# - Persistent storage
+# - Service discovery
+# - Load balancing
+```
+
+### 🔐 Security & Access Control
+
+#### Grafana Security
+- **Authentication:** admin/admin123 (development)
+- **RBAC:** Role-based access control configured
+- **SSL:** TLS 1.3 для production
+- **Sessions:** Secure session management
+
+#### Prometheus Security
+- **Data Source:** Read-only access from Grafana
+- **Retention:** 15 дней для метрик
+- **Storage:** 10GB reserved
+- **Backup:** Automated daily backups
+
+#### AlertManager Notifications
+```yaml
+Notification Channels:
+- Email: ml-team@attribution.platform
+- Slack: #ml-alerts channel
+- PagerDuty: Critical alerts only
+- Webhook: Custom integrations
+```
+
+### 📊 Monitoring Best Practices
+
+#### Alerting Strategy
+- **Layered Alerts:** Warning → Critical → Emergency
+- **Alert Fatigue Prevention:** Smart grouping и throttling
+- **Escalation Paths:** Automatic escalation после timeout
+- **Runbooks:** Detailed response procedures
+
+#### Performance Optimization
+- **Query Optimization:** Efficient PromQL queries
+- **Resource Limits:** CPU/Memory для всех компонентов
+- **Retention Policies:** Balanced storage/performance
+- **Aggregation Rules:** Pre-computed metrics
+
+#### Reliability Features
+- **High Availability:** Clustered Prometheus/Grafana setup ready
+- **Disaster Recovery:** Backup/restore procedures
+- **Monitoring of Monitoring:** Self-monitoring алерты
+- **Health Checks:** Comprehensive service validation
+
+### 🎯 Business Value
+
+#### Technical Benefits
+- ✅ **Proactive Issue Detection** - проблемы выявляются до impact
+- ✅ **Performance Optimization** - data-driven optimization decisions
+- ✅ **Capacity Planning** - predictive scaling recommendations
+- ✅ **Debug Acceleration** - comprehensive logs и tracing
+
+#### Business Benefits
+- ✅ **SLA Compliance** - 99.9%+ uptime monitoring
+- ✅ **Customer Success** - proactive customer issue resolution
+- ✅ **Cost Optimization** - resource usage optimization
+- ✅ **Competitive Advantage** - superior operational visibility
+
+#### Developer Experience
+- ✅ **Fast Debugging** - instant access к logs и metrics
+- ✅ **Performance Insights** - detailed application profiling
+- ✅ **Alert Context** - rich alert details с actionable info
+- ✅ **Self-Service** - developers can access own service metrics
+
+### 🚀 Future Enhancements
+
+#### Planned Improvements
+- **Machine Learning Alerting** - ML-powered anomaly detection
+- **Distributed Tracing** - Jaeger integration для request flows
+- **Custom Metrics** - Business-specific KPI tracking
+- **Cost Monitoring** - Resource cost tracking и optimization
+
+#### Integration Roadmap
+- **APM Integration** - Application Performance Monitoring
+- **Log Analytics** - Advanced log pattern analysis
+- **Synthetic Monitoring** - Proactive endpoint testing
+- **Compliance Reporting** - Automated compliance reports
+
+---
+
 ## 🤖 AI АГЕНТЫ И КОМАНДА
 
 ### 👥 Current Team: 8-Agent Parallel Coordination
