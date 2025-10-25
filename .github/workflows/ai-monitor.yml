@@ -83,7 +83,7 @@ jobs:
             exit 0
           fi
           echo "🤖 Sending report to ChatGPT for analysis..."
-          COMBINED_REPORT="attribution/docs/daily_reports/${REPORT_DATE}_combined.md"
+          COMBINED_REPORT="/tmp/chatgpt_input_${REPORT_DATE}.md"
           cat attribution/docs/daily_reports/${REPORT_DATE}_*.md > $COMBINED_REPORT
           CONTENT=$(head -c 4000 $COMBINED_REPORT | tr '"' "'")
           curl -s -X POST "https://api.openai.com/v1/chat/completions" \
