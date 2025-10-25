@@ -5,9 +5,10 @@ Machine Learning and Analytics Service for UnMoGrowP Attribution Platform
 ## 📊 Overview
 
 FastAPI service providing:
-- **3 Predictive ML Models** (Conversion, Revenue, Churn)
+- **4 Predictive ML Models** (Conversion, Revenue, Churn, 🆕 Multi-Period Saturation)
+- **🎯 Advanced Traffic Saturation Modeling** with ensemble predictions
 - **Automated Insights Generation**
-- **Analytics Endpoints** (15+)
+- **Analytics Endpoints** (17+)
 - **Real-time ML Inference**
 - **Comprehensive Test Coverage** with pytest + coverage
 

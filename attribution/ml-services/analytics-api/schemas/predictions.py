@@ -73,3 +73,41 @@ class Insight(BaseModel):
     actionable: bool
     recommendations: List[str]
     created_at: datetime
+
+
+# Multi-Period Saturation Prediction Models
+class SaturationPredictionRequest(BaseModel):
+    campaign_id: str
+    platform: str  # "facebook", "google", "tiktok", etc.
+    current_spend: float
+    target_spend: float
+    historical_days: int = 30  # Days of historical data to consider
+
+
+class PeriodPrediction(BaseModel):
+    period: str  # "7d", "14d", "30d", "adaptive"
+    period_days: int
+    predicted_cpa: float
+    confidence: float
+    saturation_point: float
+    cost_efficiency: float
+    risk_level: str  # "low", "medium", "high"
+
+
+class EnsemblePrediction(BaseModel):
+    predicted_cpa: float
+    confidence_interval: Dict[str, float]  # {"lower": 0.85, "upper": 1.15}
+    risk_assessment: str
+    optimal_spend: float
+    saturation_probability: float
+
+
+class SaturationPredictionResponse(BaseModel):
+    campaign_id: str
+    platform: str
+    request_timestamp: datetime
+    period_predictions: List[PeriodPrediction]
+    ensemble_prediction: EnsemblePrediction
+    recommendations: List[str]
+    data_quality_score: float
+    model_version: str

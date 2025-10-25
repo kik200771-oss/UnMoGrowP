@@ -13,7 +13,11 @@ from .predictions import (
     ChurnPredictionRequest,
     ChurnPredictionResponse,
     InsightRequest,
-    Insight
+    Insight,
+    SaturationPredictionRequest,
+    SaturationPredictionResponse,
+    PeriodPrediction,
+    EnsemblePrediction
 )
 
 __all__ = [
@@ -24,5 +28,9 @@ __all__ = [
     'ChurnPredictionRequest',
     'ChurnPredictionResponse',
     'InsightRequest',
-    'Insight'
+    'Insight',
+    'SaturationPredictionRequest',
+    'SaturationPredictionResponse',
+    'PeriodPrediction',
+    'EnsemblePrediction'
 ]

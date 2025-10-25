@@ -30,7 +30,11 @@ jobs:
 
     steps:
       - name: 🔍 Checkout Repository
+<<<<<<< HEAD
         uses: actions/checkout@v3
+=======
+        uses: actions/checkout@v4
+>>>>>>> feature/multi-period-saturation-public
         with:
           fetch-depth: 30 # Last 30 days for trend analysis
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -202,6 +206,7 @@ jobs:
 
           echo "🤖 Sending report to ChatGPT for analysis..."
 
+<<<<<<< HEAD
           echo "🚀 Sending comprehensive Development Intelligence to ChatGPT..."
           COMMITS_TODAY=$(git log --since='24 hours ago' --oneline | wc -l)
           COMMITS_WEEK=$(git log --since='7 days ago' --oneline | wc -l)
@@ -248,6 +253,53 @@ jobs:
             echo "❌ ChatGPT API error - HTTP Status: $HTTP_STATUS"
             echo "📋 Response preview:"
             head -c 500 /tmp/chatgpt_response.json || echo "No response file"
+=======
+          # Create ChatGPT analysis request
+          curl -X POST "https://api.openai.com/v1/chat/completions" \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"gpt-4\",
+              \"messages\": [
+                {
+                  \"role\": \"system\",
+                  \"content\": \"You are an AI analyst for UnMoGrowP attribution platform. Current status: 20 customers, \$103.4K MRR, Week 4 Enterprise Sprint targeting 25-28 customers and \$125K-140K MRR. Analyze the development report and provide business-focused insights, risks, and recommendations.\"
+                },
+                {
+                  \"role\": \"user\",
+                  \"content\": \"$(cat $COMBINED_REPORT | head -c 8000)\"
+                }
+              ],
+              \"max_tokens\": 2000,
+              \"temperature\": 0.1
+            }" > /tmp/chatgpt_response.json
+
+          # Extract and save ChatGPT recommendations
+          if [ -f /tmp/chatgpt_response.json ]; then
+            if grep -q "error" /tmp/chatgpt_response.json; then
+              echo "❌ ChatGPT API error:"
+              cat /tmp/chatgpt_response.json
+            else
+              echo "✅ ChatGPT analysis received"
+
+              # Extract content and save to recommendations
+              python3 -c "
+import json
+import sys
+try:
+    with open('/tmp/chatgpt_response.json', 'r') as f:
+        data = json.load(f)
+    content = data['choices'][0]['message']['content']
+    with open('${AI_FEEDBACK_DIR}/recommendations/${REPORT_DATE}_analysis.md', 'w') as f:
+        f.write('# 🤖 ChatGPT Analysis - ${REPORT_DATE}\n\n')
+        f.write(content)
+    print('✅ Analysis saved to recommendations/')
+except Exception as e:
+    print(f'❌ Error processing ChatGPT response: {e}')
+    sys.exit(1)
+              "
+            fi
+>>>>>>> feature/multi-period-saturation-public
           fi
 
       - name: 📝 Create Summary Report
@@ -293,7 +345,21 @@ jobs:
           if git diff --staged --quiet; then
             echo "📝 No changes to commit"
           else
+<<<<<<< HEAD
             git commit -m "📊 Daily AI Report ${REPORT_DATE} - Development Intelligence with ChatGPT analysis, business metrics, security status, and Week 4 Sprint progress tracking"
+=======
+            git commit -m "📊 Daily AI Report ${REPORT_DATE}
+
+Generated reports:
+- Development activity analysis
+- Business context update
+- Security status check
+- Technical health assessment
+$([ -f 'docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md' ] && echo '- ChatGPT analysis and recommendations')
+
+🤖 Generated automatically by AI Monitor
+📅 ${REPORT_DATE} at ${REPORT_TIME} (Kyiv timezone)"
+>>>>>>> feature/multi-period-saturation-public
 
             echo "✅ Reports committed successfully"
             git push
