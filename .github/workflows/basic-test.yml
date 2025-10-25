@@ -15,3 +15,10 @@ jobs:
       - run: echo "✅ Git checkout v3 successful!"
       - run: pwd
       - run: ls -la
+
+      - name: Test file creation
+        run: |
+          mkdir -p attribution/docs/daily_reports
+          echo "# Test Report - $(date)" > attribution/docs/daily_reports/test_report.md
+          echo "✅ Successfully created test report file"
+          ls -la attribution/docs/daily_reports/
