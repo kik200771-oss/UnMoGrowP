@@ -30,11 +30,7 @@ jobs:
 
     steps:
       - name: 🔍 Checkout Repository
-<<<<<<< HEAD
-        uses: actions/checkout@v3
-=======
         uses: actions/checkout@v4
->>>>>>> feature/multi-period-saturation-public
         with:
           fetch-depth: 30 # Last 30 days for trend analysis
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -206,54 +202,6 @@ jobs:
 
           echo "🤖 Sending report to ChatGPT for analysis..."
 
-<<<<<<< HEAD
-          echo "🚀 Sending comprehensive Development Intelligence to ChatGPT..."
-          COMMITS_TODAY=$(git log --since='24 hours ago' --oneline | wc -l)
-          COMMITS_WEEK=$(git log --since='7 days ago' --oneline | wc -l)
-          FILES_CHANGED=$(git log --since='24 hours ago' --name-only --pretty=format: | sort | uniq | grep -v '^$' | wc -l)
-          TODO_COUNT=$(find . -name "*.js" -o -name "*.ts" -o -name "*.go" -o -name "*.py" | xargs grep -i "TODO" 2>/dev/null | wc -l)
-          DOCKER_FILES=$(find . -name "Dockerfile" -o -name "docker-compose*.yml" | wc -l)
-
-          BUSINESS_SUMMARY="UnMoGrowP Development Intelligence: $COMMITS_TODAY commits today, $COMMITS_WEEK this week. $FILES_CHANGED files changed today. Development agents report: CI/CD 95% success, $TODO_COUNT technical debt markers, $DOCKER_FILES infrastructure files, code velocity high. Week 4 Sprint: 80% customers (20/25), 82% MRR (\$103.4K/\$125K). Team productivity: ChatGPT integration completed, focus on enterprise features."
-
-          HTTP_STATUS=$(curl -w "%{http_code}" -s -X POST "https://api.openai.com/v1/chat/completions" \
-            -H "Authorization: Bearer $OPENAI_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "model": "gpt-4o-mini",
-              "messages": [
-                {
-                  "role": "system",
-                  "content": "You are a senior DevOps consultant and business analyst for UnMoGrowP attribution platform. Current: 20 customers, $103.4K MRR. Target: 25-28 customers, $125K-140K MRR by Week 4 Sprint end. Analyze development agents data (CI/CD, code quality, technical debt, team velocity) and provide actionable insights for: 1) Development optimization 2) Technical blockers for enterprise growth 3) Team productivity improvements 4) Strategic recommendations for competing with AppsFlyer/Adjust."
-                },
-                {
-                  "role": "user",
-                  "content": "'"$BUSINESS_SUMMARY"'"
-                }
-              ],
-              "max_tokens": 1200,
-              "temperature": 0.1
-            }' \
-            -o /tmp/chatgpt_response.json)
-
-          echo "🔍 HTTP Status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" = "200" ] && [ -f /tmp/chatgpt_response.json ] && grep -q '"content"' /tmp/chatgpt_response.json; then
-            echo "✅ ChatGPT Development Intelligence analysis received"
-            echo "# 🤖 ChatGPT Analysis - ${REPORT_DATE}" > "docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md"
-            echo "" >> "docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md"
-            # Use jq for robust JSON parsing instead of grep/sed
-            if command -v jq >/dev/null 2>&1; then
-              jq -r '.choices[0].message.content' /tmp/chatgpt_response.json >> "docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md"
-            else
-              # Fallback: simple sed approach for multiline content
-              sed -n 's/.*"content":"\(.*\)","refusal.*/\1/p' /tmp/chatgpt_response.json | sed 's/\\n/\n/g' >> "docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md"
-            fi
-            echo "✅ Analysis saved to recommendations/"
-          else
-            echo "❌ ChatGPT API error - HTTP Status: $HTTP_STATUS"
-            echo "📋 Response preview:"
-            head -c 500 /tmp/chatgpt_response.json || echo "No response file"
-=======
           # Create ChatGPT analysis request
           curl -X POST "https://api.openai.com/v1/chat/completions" \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -299,7 +247,6 @@ except Exception as e:
     sys.exit(1)
               "
             fi
->>>>>>> feature/multi-period-saturation-public
           fi
 
       - name: 📝 Create Summary Report
@@ -345,9 +292,6 @@ except Exception as e:
           if git diff --staged --quiet; then
             echo "📝 No changes to commit"
           else
-<<<<<<< HEAD
-            git commit -m "📊 Daily AI Report ${REPORT_DATE} - Development Intelligence with ChatGPT analysis, business metrics, security status, and Week 4 Sprint progress tracking"
-=======
             git commit -m "📊 Daily AI Report ${REPORT_DATE}
 
 Generated reports:
@@ -359,7 +303,6 @@ $([ -f 'docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md' ] && echo '
 
 🤖 Generated automatically by AI Monitor
 📅 ${REPORT_DATE} at ${REPORT_TIME} (Kyiv timezone)"
->>>>>>> feature/multi-period-saturation-public
 
             echo "✅ Reports committed successfully"
             git push
