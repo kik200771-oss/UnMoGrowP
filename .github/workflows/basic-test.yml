@@ -7,6 +7,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello World - no git operations!"
-      - run: date
-      - run: uname -a
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - run: echo "✅ Git checkout successful!"
+      - run: pwd
+      - run: ls -la
+      - run: git branch
+      - run: git status
