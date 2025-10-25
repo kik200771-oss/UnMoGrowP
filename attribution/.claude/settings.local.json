@@ -93,7 +93,12 @@
       "Bash(start https://github.com/kik200771-oss/UnMoGrowP/settings)",
       "Bash(sudo dd:*)",
       "Bash(cmd /c ACTIVATE_GITHUB.bat)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(git submodule status:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git submodule:*)",
+      "Bash(git rm:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []
