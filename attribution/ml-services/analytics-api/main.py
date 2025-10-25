@@ -24,6 +24,7 @@ from prometheus_client import CONTENT_TYPE_LATEST
 
 # Import ML models
 from models import ConversionPredictor, RevenuePredictor, ChurnPredictor
+from models.multi_period_saturation import MultiPeriodSaturationModel
 
 # Import schemas
 from schemas import (
@@ -34,7 +35,11 @@ from schemas import (
     ChurnPredictionRequest,
     ChurnPredictionResponse,
     InsightRequest,
-    Insight
+    Insight,
+    SaturationPredictionRequest,
+    SaturationPredictionResponse,
+    PeriodPrediction,
+    EnsemblePrediction
 )
 
 # Configure logging
@@ -70,6 +75,7 @@ api_requests = Counter('api_requests_total', 'Total API requests', ['endpoint', 
 conversion_predictor = ConversionPredictor()
 revenue_predictor = RevenuePredictor()
 churn_predictor = ChurnPredictor()
+saturation_model = MultiPeriodSaturationModel()
 
 # ============================================================================
 # Health & Status Endpoints
@@ -86,7 +92,8 @@ async def health_check():
         "models": {
             "conversion_predictor": "loaded",
             "revenue_predictor": "loaded",
-            "churn_predictor": "loaded"
+            "churn_predictor": "loaded",
+            "saturation_model": "loaded"
         }
     }
 
@@ -131,6 +138,64 @@ async def predict_churn(request: ChurnPredictionRequest):
 
     ml_predictions.labels(model='churn').inc()
     return prediction
+
+@app.post("/api/ml/predict/saturation", response_model=SaturationPredictionResponse)
+async def predict_saturation(request: SaturationPredictionRequest):
+    """Predict multi-period traffic saturation and CPA growth"""
+    api_requests.labels(endpoint='/predict/saturation', method='POST').inc()
+
+    try:
+        with ml_latency.time():
+            # Get predictions for all 4 periods
+            predictions = await saturation_model.predict_multi_period(
+                campaign_id=request.campaign_id,
+                platform=request.platform,
+                current_spend=request.current_spend,
+                target_spend=request.target_spend,
+                historical_days=request.historical_days
+            )
+
+            # Convert predictions to response format
+            period_predictions = []
+            for period_name, prediction in predictions['period_predictions'].items():
+                period_predictions.append(PeriodPrediction(
+                    period=period_name,
+                    period_days=prediction['period_days'],
+                    predicted_cpa=prediction['predicted_cpa'],
+                    confidence=prediction['confidence'],
+                    saturation_point=prediction['saturation_point'],
+                    cost_efficiency=prediction['cost_efficiency'],
+                    risk_level=prediction['risk_level']
+                ))
+
+            # Create ensemble prediction
+            ensemble = predictions['ensemble_prediction']
+            ensemble_prediction = EnsemblePrediction(
+                predicted_cpa=ensemble['predicted_cpa'],
+                confidence_interval=ensemble['confidence_interval'],
+                risk_assessment=ensemble['risk_assessment'],
+                optimal_spend=ensemble['optimal_spend'],
+                saturation_probability=ensemble['saturation_probability']
+            )
+
+            # Create final response
+            response = SaturationPredictionResponse(
+                campaign_id=request.campaign_id,
+                platform=request.platform,
+                request_timestamp=datetime.utcnow(),
+                period_predictions=period_predictions,
+                ensemble_prediction=ensemble_prediction,
+                recommendations=predictions['recommendations'],
+                data_quality_score=predictions['data_quality_score'],
+                model_version=predictions['model_version']
+            )
+
+        ml_predictions.labels(model='saturation').inc()
+        return response
+
+    except Exception as e:
+        logger.error(f"Saturation prediction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
 
 # ============================================================================
 # Automated Insights Endpoints
@@ -344,6 +409,105 @@ async def compare_attribution_models(range: str = "7d"):
         ],
         "total": 368900
     }
+
+@app.get("/api/analytics/saturation")
+async def get_saturation_analytics(
+    campaign_id: str = "campaign_001",
+    platform: str = "facebook",
+    current_spend: float = 1000.0,
+    target_spend: float = 2000.0
+):
+    """Get multi-period saturation analytics for dashboard"""
+    api_requests.labels(endpoint='/analytics/saturation', method='GET').inc()
+
+    try:
+        # Create a request object
+        request = SaturationPredictionRequest(
+            campaign_id=campaign_id,
+            platform=platform,
+            current_spend=current_spend,
+            target_spend=target_spend,
+            historical_days=30
+        )
+
+        # Get predictions
+        predictions = await saturation_model.predict_multi_period(
+            campaign_id=request.campaign_id,
+            platform=request.platform,
+            current_spend=request.current_spend,
+            target_spend=request.target_spend,
+            historical_days=request.historical_days
+        )
+
+        # Format for analytics dashboard
+        formatted_response = {
+            "campaign_id": campaign_id,
+            "platform": platform,
+            "spend_range": {
+                "current": current_spend,
+                "target": target_spend,
+                "increase_percentage": ((target_spend - current_spend) / current_spend) * 100
+            },
+            "periods": [],
+            "ensemble": {
+                "predicted_cpa": predictions['ensemble_prediction']['predicted_cpa'],
+                "confidence_interval": predictions['ensemble_prediction']['confidence_interval'],
+                "risk_level": predictions['ensemble_prediction']['risk_assessment'],
+                "optimal_spend": predictions['ensemble_prediction']['optimal_spend'],
+                "saturation_probability": predictions['ensemble_prediction']['saturation_probability']
+            },
+            "recommendations": predictions['recommendations'],
+            "data_quality": predictions['data_quality_score'],
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        # Add period predictions
+        for period_name, prediction in predictions['period_predictions'].items():
+            formatted_response["periods"].append({
+                "period": period_name,
+                "days": prediction['period_days'],
+                "predicted_cpa": prediction['predicted_cpa'],
+                "confidence": prediction['confidence'],
+                "saturation_point": prediction['saturation_point'],
+                "cost_efficiency": prediction['cost_efficiency'],
+                "risk_level": prediction['risk_level']
+            })
+
+        return formatted_response
+
+    except Exception as e:
+        logger.error(f"Saturation analytics error: {str(e)}")
+        # Return mock data if model fails
+        return {
+            "campaign_id": campaign_id,
+            "platform": platform,
+            "spend_range": {
+                "current": current_spend,
+                "target": target_spend,
+                "increase_percentage": ((target_spend - current_spend) / current_spend) * 100
+            },
+            "periods": [
+                {"period": "7d", "days": 7, "predicted_cpa": 1.15, "confidence": 0.82, "saturation_point": 1800.0, "cost_efficiency": 0.87, "risk_level": "low"},
+                {"period": "14d", "days": 14, "predicted_cpa": 1.22, "confidence": 0.89, "saturation_point": 1950.0, "cost_efficiency": 0.82, "risk_level": "low"},
+                {"period": "30d", "days": 30, "predicted_cpa": 1.28, "confidence": 0.91, "saturation_point": 2200.0, "cost_efficiency": 0.78, "risk_level": "medium"},
+                {"period": "adaptive", "days": 21, "predicted_cpa": 1.24, "confidence": 0.95, "saturation_point": 2100.0, "cost_efficiency": 0.81, "risk_level": "low"}
+            ],
+            "ensemble": {
+                "predicted_cpa": 1.23,
+                "confidence_interval": {"lower": 1.18, "upper": 1.28},
+                "risk_level": "low",
+                "optimal_spend": 2100.0,
+                "saturation_probability": 0.15
+            },
+            "recommendations": [
+                "Safe to increase spend to $2100 based on ensemble prediction",
+                "Monitor 30-day trend for early saturation signals",
+                "Consider testing creative variations at higher spend levels"
+            ],
+            "data_quality": 0.85,
+            "timestamp": datetime.utcnow().isoformat(),
+            "note": "Using fallback data - model temporarily unavailable"
+        }
 
 # ============================================================================
 # Startup & Shutdown Events
