@@ -205,15 +205,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "📝 No changes to commit"
           else
-            git commit -m "🚀 Development Intelligence Report ${REPORT_DATE}
-
-Generated comprehensive analysis including:
-📊 Development agents data (CI/CD, code quality, security, performance)
-🤖 ChatGPT intelligence analysis with actionable recommendations
-💼 Week 4 Enterprise Sprint progress tracking
-🎯 Strategic insights for team productivity optimization
-
-Development Intelligence + AI Analysis Complete"
+            git commit -m "🚀 Development Intelligence Report ${REPORT_DATE} - Enhanced AI analysis with development agents data, ChatGPT insights, and Week 4 Sprint progress tracking"
             git push
             echo "✅ Reports committed and pushed successfully"
           fi
