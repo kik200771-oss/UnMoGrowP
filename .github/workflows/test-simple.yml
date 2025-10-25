@@ -1,0 +1,33 @@
+name: 🧪 Simple Test Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  simple-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test Basic Commands
+        run: |
+          echo "Testing basic functionality"
+          date
+          pwd
+          mkdir -p attribution/docs/daily_reports
+          echo "Test successful" > attribution/docs/daily_reports/test.md
+
+      - name: Commit Results
+        run: |
+          git config user.name "Test Bot"
+          git config user.email "test@test.com"
+          git add .
+          git commit -m "Test workflow successful" || echo "Nothing to commit"
+          git push || echo "Push failed"
+
+      - name: Success
+        run: echo "All tests passed!"
