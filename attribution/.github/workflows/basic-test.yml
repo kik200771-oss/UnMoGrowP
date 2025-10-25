@@ -9,6 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: echo "Hello World from correct branch!"
-      - run: mkdir -p attribution/docs/daily_reports
-      - run: echo "Test file" > attribution/docs/daily_reports/test.txt
-      - run: ls -la attribution/docs/daily_reports
+      - run: pwd
+      - run: ls -la
