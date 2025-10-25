@@ -40,7 +40,7 @@ jobs:
           echo "REPORT_DATE=$(date +%F)" >> $GITHUB_ENV
           echo "REPORT_TIME=$(date +%H:%M)" >> $GITHUB_ENV
           echo "REPORT_TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
-          mkdir -p attribution/docs/daily_reports attribution/docs/ai-feedback/{recommendations,insights,alerts}
+          mkdir -p attribution/docs/daily_reports attribution/docs/ai-feedback/recommendations attribution/docs/ai-feedback/insights attribution/docs/ai-feedback/alerts
 
       - name: 📊 Collect Git Development Metrics
         run: |
@@ -63,7 +63,7 @@ jobs:
 
           # File changes
           echo "### Changed Files:" >> $REPORT_FILE
-          git log --since="24 hours ago" --name-only --pretty=format: | sort | uniq | grep -v '^$' >> $REPORT_FILE || echo "No file changes" >> $REPORT_FILE
+          git log --since="24 hours ago" --name-only --pretty=format:"" | sort | uniq | grep -v "^$" >> $REPORT_FILE || echo "No file changes" >> $REPORT_FILE
           echo "" >> $REPORT_FILE
 
           # Contributors
@@ -118,9 +118,9 @@ jobs:
           echo "" >> $SECURITY_FILE
 
           echo "## Configuration Files Status:" >> $SECURITY_FILE
-          echo "- .gitignore: $(wc -l < .gitignore) protection patterns" >> $SECURITY_FILE
-          echo "- Environment templates: $(find . -name "*.env.template" | wc -l) files" >> $SECURITY_FILE
-          echo "- Docker configs: $(find . -name "docker-compose*.yml" | wc -l) files" >> $SECURITY_FILE
+          echo "- .gitignore: $(wc -l < .gitignore 2>/dev/null || echo 0) protection patterns" >> $SECURITY_FILE
+          echo "- Environment templates: $(find . -name "*.env.template" 2>/dev/null | wc -l) files" >> $SECURITY_FILE
+          echo "- Docker configs: $(find . -name "docker-compose*.yml" 2>/dev/null | wc -l) files" >> $SECURITY_FILE
           echo "" >> $SECURITY_FILE
 
       - name: 🧪 Technical Health Check
@@ -132,24 +132,24 @@ jobs:
           echo "" >> $TECH_FILE
 
           echo "## Code Structure Analysis:" >> $TECH_FILE
-          echo "- Total files: $(find . -type f -not -path './.git/*' | wc -l)" >> $TECH_FILE
-          echo "- Go files: $(find . -name "*.go" -not -path './.git/*' | wc -l)" >> $TECH_FILE
-          echo "- TypeScript files: $(find . -name "*.ts" -not -path './.git/*' | wc -l)" >> $TECH_FILE
-          echo "- Svelte files: $(find . -name "*.svelte" -not -path './.git/*' | wc -l)" >> $TECH_FILE
-          echo "- Python files: $(find . -name "*.py" -not -path './.git/*' | wc -l)" >> $TECH_FILE
+          echo "- Total files: $(find . -type f -not -path './.git/*' 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- Go files: $(find . -name "*.go" -not -path './.git/*' 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- TypeScript files: $(find . -name "*.ts" -not -path './.git/*' 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- Svelte files: $(find . -name "*.svelte" -not -path './.git/*' 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- Python files: $(find . -name "*.py" -not -path './.git/*' 2>/dev/null | wc -l)" >> $TECH_FILE
           echo "" >> $TECH_FILE
 
           echo "## Infrastructure Files:" >> $TECH_FILE
-          echo "- Docker Compose files: $(find . -name "docker-compose*.yml" | wc -l)" >> $TECH_FILE
-          echo "- Kubernetes manifests: $(find . -name "*.yaml" -path "*/kubernetes/*" | wc -l)" >> $TECH_FILE
-          echo "- GitHub Actions: $(find .github/workflows -name "*.yml" | wc -l)" >> $TECH_FILE
+          echo "- Docker Compose files: $(find . -name "docker-compose*.yml" 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- Kubernetes manifests: $(find . -name "*.yaml" -path "*/kubernetes/*" 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- GitHub Actions: $(find .github/workflows -name "*.yml" 2>/dev/null | wc -l)" >> $TECH_FILE
           echo "" >> $TECH_FILE
 
           echo "## Test Coverage Status:" >> $TECH_FILE
-          echo "- Test files: $(find . -name "*test*" -o -name "*spec*" | grep -E "\.(go|ts|js|py)$" | wc -l)" >> $TECH_FILE
-          echo "- Go test files: $(find . -name "*_test.go" | wc -l)" >> $TECH_FILE
-          echo "- JS/TS test files: $(find . -name "*.test.ts" -o -name "*.spec.ts" | wc -l)" >> $TECH_FILE
-          echo "- Python test files: $(find . -name "*test*.py" | wc -l)" >> $TECH_FILE
+          echo "- Test files: $(find . -name "*test*" -o -name "*spec*" 2>/dev/null | grep -E "\.(go|ts|js|py)$" | wc -l)" >> $TECH_FILE
+          echo "- Go test files: $(find . -name "*_test.go" 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- JS/TS test files: $(find . -name "*.test.ts" -o -name "*.spec.ts" 2>/dev/null | wc -l)" >> $TECH_FILE
+          echo "- Python test files: $(find . -name "*test*.py" 2>/dev/null | wc -l)" >> $TECH_FILE
           echo "" >> $TECH_FILE
 
       - name: 🚨 Security Sanitization
@@ -230,8 +230,8 @@ jobs:
             else
               echo "✅ ChatGPT analysis received"
 
-              # Extract content and save to recommendations
-              cat > /tmp/process_chatgpt.py << 'EOF'
+              # Create Python script for processing
+              cat > /tmp/process_response.py << 'PYTHON_EOF'
 import json
 import sys
 import os
@@ -239,22 +239,31 @@ import os
 try:
     with open('/tmp/chatgpt_response.json', 'r') as f:
         data = json.load(f)
-    content = data['choices'][0]['message']['content']
 
-    ai_feedback_dir = os.environ.get('AI_FEEDBACK_DIR', 'attribution/docs/ai-feedback')
-    report_date = os.environ.get('REPORT_DATE', '2025-10-25')
+    if 'choices' in data and len(data['choices']) > 0:
+        content = data['choices'][0]['message']['content']
 
-    output_file = f'{ai_feedback_dir}/recommendations/{report_date}_analysis.md'
+        ai_feedback_dir = os.environ.get('AI_FEEDBACK_DIR', 'attribution/docs/ai-feedback')
+        report_date = os.environ.get('REPORT_DATE', '2025-10-25')
 
-    with open(output_file, 'w') as f:
-        f.write(f'# 🤖 ChatGPT Analysis - {report_date}\n\n')
-        f.write(content)
-    print('✅ Analysis saved to recommendations/')
+        output_file = f'{ai_feedback_dir}/recommendations/{report_date}_analysis.md'
+
+        with open(output_file, 'w') as f:
+            f.write(f'# 🤖 ChatGPT Analysis - {report_date}\n\n')
+            f.write(content)
+
+        print('✅ Analysis saved to recommendations/')
+    else:
+        print('❌ No choices in ChatGPT response')
+        sys.exit(1)
+
 except Exception as e:
     print(f'❌ Error processing ChatGPT response: {e}')
     sys.exit(1)
-EOF
-              python3 /tmp/process_chatgpt.py
+PYTHON_EOF
+
+              export AI_FEEDBACK_DIR="$AI_FEEDBACK_DIR"
+              python3 /tmp/process_response.py
             fi
           fi
 
@@ -270,7 +279,7 @@ EOF
 
           echo "## 📈 Key Metrics" >> $SUMMARY_FILE
           echo "- **Commits Today:** $(git log --since='24 hours ago' --oneline | wc -l)" >> $SUMMARY_FILE
-          echo "- **Files Changed:** $(git log --since='24 hours ago' --name-only --pretty=format: | sort | uniq | wc -l)" >> $SUMMARY_FILE
+          echo "- **Files Changed:** $(git log --since='24 hours ago' --name-only --pretty=format:'' | sort | uniq | wc -l)" >> $SUMMARY_FILE
           echo "- **Contributors:** $(git log --since='24 hours ago' --pretty=format:'%an' | sort | uniq | wc -l)" >> $SUMMARY_FILE
           echo "- **Security Commits:** $(git log --since='24 hours ago' --grep='security\|fix\|patch' --oneline | wc -l)" >> $SUMMARY_FILE
           echo "" >> $SUMMARY_FILE
@@ -301,18 +310,25 @@ EOF
           if git diff --staged --quiet; then
             echo "📝 No changes to commit"
           else
-            git commit -m "📊 Daily AI Report ${REPORT_DATE}
+            COMMIT_MSG="📊 Daily AI Report ${REPORT_DATE}
 
 Generated reports:
 - Development activity analysis
 - Business context update
 - Security status check
-- Technical health assessment
-$([ -f 'attribution/docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md' ] && echo '- ChatGPT analysis and recommendations')
+- Technical health assessment"
+
+            if [ -f "attribution/docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md" ]; then
+              COMMIT_MSG="${COMMIT_MSG}
+- ChatGPT analysis and recommendations"
+            fi
+
+            COMMIT_MSG="${COMMIT_MSG}
 
 🤖 Generated automatically by AI Monitor
 📅 ${REPORT_DATE} at ${REPORT_TIME} (Kyiv timezone)"
 
+            git commit -m "$COMMIT_MSG"
             echo "✅ Reports committed successfully"
             git push
             echo "📤 Reports pushed to repository"
@@ -323,11 +339,11 @@ $([ -f 'attribution/docs/ai-feedback/recommendations/${REPORT_DATE}_analysis.md'
           echo "🎉 AI Monitoring completed successfully!"
           echo ""
           echo "📊 Generated Reports:"
-          ls -la attribution/docs/daily_reports/${REPORT_DATE}_*
+          ls -la attribution/docs/daily_reports/${REPORT_DATE}_* 2>/dev/null || echo "No reports found"
           echo ""
           if [ -d "attribution/docs/ai-feedback/recommendations" ] && [ "$(ls attribution/docs/ai-feedback/recommendations/ 2>/dev/null | wc -l)" -gt 0 ]; then
             echo "🤖 AI Feedback:"
-            ls -la attribution/docs/ai-feedback/recommendations/${REPORT_DATE}_*
+            ls -la attribution/docs/ai-feedback/recommendations/${REPORT_DATE}_* 2>/dev/null || echo "No AI feedback found"
           fi
           echo ""
           echo "⏰ Next report: Tomorrow at 11:00 Kyiv time"
