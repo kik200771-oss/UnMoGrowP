@@ -231,21 +231,30 @@ jobs:
               echo "✅ ChatGPT analysis received"
 
               # Extract content and save to recommendations
-              python3 -c "
+              cat > /tmp/process_chatgpt.py << 'EOF'
 import json
 import sys
+import os
+
 try:
     with open('/tmp/chatgpt_response.json', 'r') as f:
         data = json.load(f)
     content = data['choices'][0]['message']['content']
-    with open('${AI_FEEDBACK_DIR}/recommendations/${REPORT_DATE}_analysis.md', 'w') as f:
-        f.write('# 🤖 ChatGPT Analysis - ${REPORT_DATE}\n\n')
+
+    ai_feedback_dir = os.environ.get('AI_FEEDBACK_DIR', 'attribution/docs/ai-feedback')
+    report_date = os.environ.get('REPORT_DATE', '2025-10-25')
+
+    output_file = f'{ai_feedback_dir}/recommendations/{report_date}_analysis.md'
+
+    with open(output_file, 'w') as f:
+        f.write(f'# 🤖 ChatGPT Analysis - {report_date}\n\n')
         f.write(content)
     print('✅ Analysis saved to recommendations/')
 except Exception as e:
     print(f'❌ Error processing ChatGPT response: {e}')
     sys.exit(1)
-              "
+EOF
+              python3 /tmp/process_chatgpt.py
             fi
           fi
 
