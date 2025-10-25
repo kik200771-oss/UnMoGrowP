@@ -92,7 +92,8 @@
       "Bash(start https://github.com/kik200771-oss/UnMoGrowP/settings/branches)",
       "Bash(start https://github.com/kik200771-oss/UnMoGrowP/settings)",
       "Bash(sudo dd:*)",
-      "Bash(cmd /c ACTIVATE_GITHUB.bat)"
+      "Bash(cmd /c ACTIVATE_GITHUB.bat)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
