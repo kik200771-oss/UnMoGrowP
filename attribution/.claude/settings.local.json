@@ -98,7 +98,13 @@
       "Bash(git rev-parse:*)",
       "Bash(git submodule:*)",
       "Bash(git rm:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Read(//c/Users/User/Documents/АТРИБУЦИЯ/АРХИТЕКТУРА/**)",
+      "Read(//c/Users/User/Downloads/**)",
+      "Bash(GITHUB_TOKEN=\"dummy\" REPO_URL=\"https://github.com/kik200771-oss/UnMoGrowP\" python:*)",
+      "Bash(gh workflow:*)",
+      "Bash(start https://github.com/kik200771-oss/UnMoGrowP/actions/workflows/ai-monitor-simple.yml)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": [],
     "ask": []

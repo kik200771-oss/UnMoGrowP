@@ -2,10 +2,28 @@
 ## Полный контекст проекта для новых сессий
 
 **Created:** 2025-10-23
-**Version:** 4.4.0
-**Last Updated:** 2025-10-25 (🤖 ChatGPT GitHub Integration Deployed)
-**Current Sprint:** Week 4 Enterprise Sprint (8-Agent Coordination + AI Monitoring)
+**Version:** 4.5.0
+**Last Updated:** 2025-10-26 (🎯 CORE ATTRIBUTION SYSTEM PRIORITY PLAN)
+**Current Sprint:** Week 4 Enterprise Sprint - CORE ATTRIBUTION SYSTEM DEVELOPMENT FOCUS
 **Status:** 🚀 Production-Ready Platform + 🆕 Advanced ML Saturation Modeling + 🤖 AI-Powered Continuous Monitoring + Ready for Public Launch
+
+## 🚨 КРИТИЧЕСКИ ВАЖНО ДЛЯ НОВЫХ СЕССИЙ (2025-10-26)
+
+### ФИЛОСОФИЯ ПРОЕКТА:
+**СИСТЕМА АТРИБУЦИИ = ЯДРО И ОСНОВА ВСЕГО СЕРВИСА**
+Без качественной атрибуции все остальное (ChatGPT, мониторинг, дашборды) - просто красивые дополнения к пустому месту.
+
+### ТЕКУЩИЙ КРИТИЧЕСКИЙ ПЛАН:
+**ВСЕ ОСТАЛЬНОЕ - НА ПОТОМ, ПОКА НЕ ЗАКОНЧИМ ATTRIBUTION SYSTEM**
+
+**Детальный план**: `WEEK_4_SPRINT_ATTRIBUTION_PLAN.md` (ОБЯЗАТЕЛЬНО ПРОЧИТАТЬ)
+
+### IMMEDIATE PRIORITIES (START HERE):
+1. **Batch Touchpoint Queries** - fix performance bottleneck (4-6 часов)
+2. **Complete Multi-Period Saturation** - finish last 12% (4-6 часов)
+3. **Load Testing** - verify 400 events/sec (2 часа)
+
+**РЕЗУЛЬТАТ**: 25-28 customers, $125K-140K MRR через качественную атрибуцию
 
 ---
 

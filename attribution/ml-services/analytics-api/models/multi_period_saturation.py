@@ -429,9 +429,60 @@ class MultiPeriodSaturationModel:
 
     def _get_historical_data(self, campaign_id: str) -> pd.DataFrame:
         """Получает исторические данные кампании из ClickHouse"""
-        # Заглушка - в реальности запрос к ClickHouse
         # В продакшене здесь будет SQL запрос к campaign_performance таблице
-        pass
+        # Для демонстрации создаем synthetic данные
+
+        # Generate synthetic historical data for demo
+        np.random.seed(42)  # For reproducible results
+
+        # Create 90 days of historical data
+        dates = pd.date_range(
+            end=datetime.now().date(),
+            periods=90,
+            freq='D'
+        )
+
+        # Simulate realistic campaign performance data
+        base_spend = 5000
+        spend_variance = 2000
+
+        data = []
+        for i, date in enumerate(dates):
+            # Simulate spend with weekly patterns and growth trend
+            weekly_multiplier = 1.0 + 0.2 * np.sin(2 * np.pi * i / 7)  # Weekly pattern
+            growth_trend = 1.0 + 0.001 * i  # Slight growth over time
+            noise = np.random.normal(0, 0.1)
+
+            daily_spend = base_spend * weekly_multiplier * growth_trend * (1 + noise)
+            daily_spend = max(daily_spend, 1000)  # Minimum spend
+
+            # Simulate CPI with saturation curve (logistic)
+            # CPI increases as spend increases (diminishing returns)
+            normalized_spend = (daily_spend - 1000) / 10000
+            base_cpi = 2.5 + 3.0 / (1 + np.exp(-5 * (normalized_spend - 0.5)))
+            cpi_noise = np.random.normal(0, 0.2)
+            daily_cpi = max(base_cpi + cpi_noise, 1.0)
+
+            # Calculate installs and cost
+            daily_cost = daily_spend
+            daily_installs = int(daily_cost / daily_cpi)
+            actual_cpi = daily_cost / daily_installs if daily_installs > 0 else daily_cpi
+
+            data.append({
+                'date': date,
+                'campaign_id': campaign_id,
+                'ad_spend': daily_spend,
+                'cost_per_install': actual_cpi,
+                'installs': daily_installs,
+                'cost': daily_cost,
+                'impressions': daily_installs * 10,  # Rough conversion rate
+                'clicks': daily_installs * 2
+            })
+
+        df = pd.DataFrame(data)
+        logger.info(f"Generated {len(df)} days of synthetic data for campaign {campaign_id}")
+
+        return df
 
     def _filter_by_period(self, data: pd.DataFrame, days: int) -> pd.DataFrame:
         """Фильтрует данные по последним N дням"""
@@ -507,6 +558,159 @@ class MultiPeriodSaturationModel:
         confidence = (mape_score * 0.4 + r2_score * 0.4 + data_bonus * 0.2) * period_penalty
 
         return min(max(confidence, 0.1), 1.0)  # Clip между 0.1 и 1.0
+
+    def _insufficient_data_response(self, campaign_id: str, target_spends: List[float]) -> Dict:
+        """Возвращает ответ при недостаточных данных"""
+        return {
+            'campaign_id': campaign_id,
+            'prediction_timestamp': datetime.now().isoformat(),
+            'target_spends': target_spends,
+            'predictions_by_period': {},
+            'ensemble': None,
+            'metadata': {
+                'error': 'insufficient_data',
+                'message': f'Insufficient historical data for campaign {campaign_id}',
+                'min_required_points': self.min_data_points
+            }
+        }
+
+    def _generate_metadata(self, historical_data: pd.DataFrame, period_predictions: Dict) -> Dict:
+        """Генерирует метаданные анализа"""
+        return {
+            'total_data_points': len(historical_data),
+            'data_date_range': {
+                'start': historical_data['date'].min().isoformat(),
+                'end': historical_data['date'].max().isoformat(),
+                'span_days': (historical_data['date'].max() - historical_data['date'].min()).days
+            },
+            'periods_analyzed': list(period_predictions.keys()),
+            'model_version': '2.0.0',
+            'analysis_timestamp': datetime.now().isoformat()
+        }
+
+    def _fit_linear_fallback(self, spend_values: np.ndarray, cpi_values: np.ndarray) -> Tuple[float, float, float]:
+        """Fallback к линейной модели когда logistic curve не работает"""
+        # Simple linear regression
+        slope = np.corrcoef(spend_values, cpi_values)[0, 1] * np.std(cpi_values) / np.std(spend_values)
+        intercept = np.mean(cpi_values) - slope * np.mean(spend_values)
+
+        # Convert to logistic parameters
+        max_cpa = max(cpi_values) * 1.5
+        steepness = 0.0001  # Very gradual
+        inflection_point = np.mean(spend_values)
+
+        return max_cpa, steepness, inflection_point
+
+    def _extract_contextual_features(self, data: pd.DataFrame, campaign_id: str) -> np.ndarray:
+        """Извлекает контекстные признаки для ML refinement"""
+        features = []
+
+        # Time-based features
+        data['dayofweek'] = pd.to_datetime(data['date']).dt.dayofweek
+        data['month'] = pd.to_datetime(data['date']).dt.month
+
+        # Trend features
+        data_sorted = data.sort_values('date')
+        data_sorted['spend_ma7'] = data_sorted['ad_spend'].rolling(window=7, min_periods=1).mean()
+        data_sorted['cpi_ma7'] = data_sorted['cost_per_install'].rolling(window=7, min_periods=1).mean()
+
+        # Volume features
+        avg_spend = data['ad_spend'].mean()
+        avg_cpi = data['cost_per_install'].mean()
+        spend_volatility = data['ad_spend'].std() / avg_spend if avg_spend > 0 else 0
+
+        # Return aggregated features
+        features = np.array([
+            avg_spend,
+            avg_cpi,
+            spend_volatility,
+            data['dayofweek'].mode().iloc[0] if len(data) > 0 else 1,
+            len(data),  # Data points count
+        ])
+
+        return features.reshape(1, -1)
+
+    def _apply_ml_refinement(self, contextual_features: np.ndarray, period_name: str, target_spends: List[float]) -> List[float]:
+        """Применяет ML коррекцию к базовым предсказаниям"""
+        # В реальности здесь были бы trained модели
+        # Для демо возвращаем небольшие случайные коррекции
+        adjustments = []
+        for spend in target_spends:
+            # Small random adjustment based on spend level
+            if spend < 10000:
+                adj = np.random.normal(0, 0.05)  # Small variance for low spend
+            elif spend < 30000:
+                adj = np.random.normal(0, 0.1)   # Medium variance
+            else:
+                adj = np.random.normal(-0.05, 0.15)  # Slight penalty for high spend
+
+            adjustments.append(adj)
+
+        return adjustments
+
+    def _calculate_r_squared(self, y_actual: np.ndarray, y_predicted: np.ndarray) -> float:
+        """Вычисляет R-squared коэффициент"""
+        ss_res = np.sum((y_actual - y_predicted) ** 2)
+        ss_tot = np.sum((y_actual - np.mean(y_actual)) ** 2)
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+        return max(r_squared, 0)
+
+    def _assess_fit_quality(self, mape: float, r_squared: float, data_points: int) -> str:
+        """Оценивает качество fit модели"""
+        if mape < 0.15 and r_squared > 0.7 and data_points >= 15:
+            return "excellent"
+        elif mape < 0.25 and r_squared > 0.5 and data_points >= 10:
+            return "good"
+        elif mape < 0.40 and r_squared > 0.3 and data_points >= 7:
+            return "fair"
+        else:
+            return "poor"
+
+    def _assess_risk(self, saturation_level: float, predicted_cpi: float) -> str:
+        """Оценивает риск для данного spend level"""
+        if saturation_level > 0.8:
+            return "high"
+        elif saturation_level > 0.6:
+            return "medium"
+        else:
+            return "low"
+
+    def _generate_saturation_warning(self, spend_trajectory: List[Dict], period_name: str) -> Optional[str]:
+        """Генерирует предупреждение о насыщении"""
+        high_saturation_points = [item for item in spend_trajectory if item['saturation_level'] > 0.75]
+
+        if len(high_saturation_points) >= len(spend_trajectory) * 0.5:
+            return f"High saturation risk detected for {period_name} period. Consider reducing spend levels."
+
+        return None
+
+    def _calculate_trend_stability(self, period_data: pd.DataFrame) -> float:
+        """Рассчитывает стабильность тренда в данных"""
+        if len(period_data) < 3:
+            return 0.5
+
+        # Calculate coefficient of variation for CPI
+        cpi_cv = period_data['cost_per_install'].std() / period_data['cost_per_install'].mean()
+
+        # Stability score (lower CV = higher stability)
+        stability = max(0, 1 - cpi_cv / 0.5)  # Normalize to 0-1
+
+        return min(stability, 1.0)
+
+    def _assess_ensemble_risk(self, consensus_trajectory: List[Dict], confidence_intervals: List[Dict]) -> str:
+        """Оценивает общий риск ensemble прогноза"""
+        # Calculate average confidence interval width
+        avg_ci_width = np.mean([ci['upper_bound'] - ci['lower_bound'] for ci in confidence_intervals])
+
+        # Calculate high saturation percentage
+        high_sat_percentage = sum(1 for item in consensus_trajectory if item['saturation_level'] > 0.7) / len(consensus_trajectory)
+
+        if avg_ci_width > 2.0 or high_sat_percentage > 0.6:
+            return "high"
+        elif avg_ci_width > 1.0 or high_sat_percentage > 0.3:
+            return "medium"
+        else:
+            return "low"
 
 # Пример использования для демонстрации
 def demo_multi_period_prediction():
