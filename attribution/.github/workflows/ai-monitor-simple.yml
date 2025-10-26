@@ -1,4 +1,4 @@
-name: AI Project Monitor
+name: AI Daily Repository Monitor
 on:
   schedule:
     - cron: "0 8 * * *"   # Каждый день в 11:00 по Киеву (08:00 UTC)
