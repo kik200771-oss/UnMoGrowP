@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: "0 8 * * *"
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Monitor mode'
+        required: false
+        default: 'standard'
 
 jobs:
   monitor:
