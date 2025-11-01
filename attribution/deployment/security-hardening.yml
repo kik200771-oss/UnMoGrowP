@@ -1,0 +1,262 @@
+# ============================================================================
+# UnMoGrowP Attribution Platform - Production Security Hardening
+# Week 1 Sprint: DevOps Security Configuration
+# ============================================================================
+
+# This file documents security hardening measures for production deployment
+
+security_measures:
+
+  # 1. Network Security
+  network:
+    - name: "Network Isolation"
+      description: "All services in dedicated Docker network"
+      implementation: "attribution-net bridge network with subnet isolation"
+      status: "active"
+
+    - name: "Port Restriction"
+      description: "Only necessary ports exposed to host"
+      ports:
+        public:
+          - "80:80"     # HTTP (redirect to HTTPS)
+          - "443:443"   # HTTPS
+        monitoring:
+          - "3000:3000" # Grafana (restrict in production)
+          - "9090:9090" # Prometheus (restrict in production)
+        internal:
+          - "8080:8080" # Ingestion API (behind nginx)
+          - "8082:8082" # Attribution API (behind nginx)
+          - "8084:8084" # Customer Success API (behind nginx)
+
+    - name: "Firewall Rules"
+      description: "Host firewall configuration"
+      rules:
+        - "Allow HTTP/HTTPS from any"
+        - "Allow SSH from management IPs only"
+        - "Block all other incoming by default"
+
+  # 2. Authentication & Authorization
+  authentication:
+    - name: "PostgreSQL Authentication"
+      method: "SCRAM-SHA-256"
+      rotation: "90 days"
+      status: "active"
+
+    - name: "ClickHouse Authentication"
+      method: "Password-based with user management"
+      rotation: "90 days"
+      status: "active"
+
+    - name: "API Key Management"
+      method: "Unique per customer, rotatable"
+      format: "prod_{customer}_{hex32}"
+      storage: "Environment variables, encrypted at rest"
+
+    - name: "JWT Tokens"
+      algorithm: "HS256"
+      secret_min_length: 32
+      expiry: "24h"
+      refresh_expiry: "7d"
+
+  # 3. Data Encryption
+  encryption:
+    - name: "Data in Transit"
+      method: "TLS 1.3"
+      certificates: "Let's Encrypt + automatic renewal"
+      status: "production_ready"
+
+    - name: "Data at Rest"
+      databases:
+        postgres: "Encrypted volumes (LUKS)"
+        clickhouse: "Encrypted volumes (LUKS)"
+        redis: "Encrypted volumes (LUKS)"
+      backups: "Encrypted with customer-managed keys"
+
+    - name: "Secrets Management"
+      method: "Docker secrets + environment variables"
+      rotation: "Automated via deployment scripts"
+
+  # 4. Container Security
+  containers:
+    - name: "Non-root User"
+      description: "All containers run as non-root"
+      implementation: "USER directive in Dockerfiles"
+      status: "active"
+
+    - name: "Read-only Filesystems"
+      description: "Container filesystems mounted read-only where possible"
+      exceptions: ["/tmp", "/var/log", "data volumes"]
+
+    - name: "Resource Limits"
+      description: "CPU and memory limits enforced"
+      limits:
+        cpu: "Defined per service in docker-compose"
+        memory: "Defined per service in docker-compose"
+        restart_policy: "unless-stopped (not always)"
+
+    - name: "Image Scanning"
+      description: "Automated vulnerability scanning"
+      tools: ["Trivy", "Docker Scout"]
+      frequency: "On build and weekly"
+
+  # 5. Access Control
+  access_control:
+    - name: "Role-Based Access Control (RBAC)"
+      description: "Database-level RBAC implemented"
+      roles:
+        - "admin: Full system access"
+        - "analyst: Read-only analytics access"
+        - "customer: Scoped to customer data only"
+      status: "active"
+
+    - name: "API Rate Limiting"
+      description: "Rate limits prevent abuse"
+      limits:
+        per_minute: 100
+        per_hour: 1000
+        burst: 20
+      enforcement: "Nginx + Redis"
+
+    - name: "CORS Configuration"
+      description: "Strict CORS policies"
+      allowed_origins: "Configured per environment"
+      credentials: "Required for authenticated requests"
+
+  # 6. Monitoring & Auditing
+  monitoring:
+    - name: "Audit Logging"
+      description: "All security events logged"
+      events:
+        - "Authentication attempts"
+        - "Authorization failures"
+        - "Configuration changes"
+        - "Data access patterns"
+      retention: "90 days in hot storage, 1 year in cold"
+
+    - name: "Intrusion Detection"
+      description: "Anomaly detection and alerting"
+      metrics:
+        - "Failed authentication attempts"
+        - "Unusual traffic patterns"
+        - "Resource consumption anomalies"
+      alerting: "Slack + PagerDuty"
+
+    - name: "Security Metrics"
+      description: "Security KPIs tracked in Prometheus"
+      metrics:
+        - "authentication_failures_total"
+        - "authorization_denials_total"
+        - "rate_limit_hits_total"
+        - "tls_handshake_errors_total"
+
+  # 7. Backup & Recovery
+  backup:
+    - name: "Automated Backups"
+      frequency: "Daily full, hourly incremental"
+      retention: "30 days hot, 1 year cold"
+      encryption: "AES-256"
+
+    - name: "Disaster Recovery"
+      rpo: "1 hour"  # Recovery Point Objective
+      rto: "4 hours" # Recovery Time Objective
+      testing: "Monthly DR drills"
+
+    - name: "Backup Verification"
+      method: "Automated restore tests"
+      frequency: "Weekly"
+      validation: "Data integrity checks"
+
+  # 8. Compliance
+  compliance:
+    - name: "GDPR Compliance"
+      measures:
+        - "Right to be forgotten implementation"
+        - "Data portability support"
+        - "Consent management"
+        - "Data processing records"
+      status: "compliant"
+
+    - name: "SOC 2 Type II Readiness"
+      controls:
+        - "Access controls documented"
+        - "Change management process"
+        - "Incident response plan"
+        - "Vendor risk management"
+      status: "in_progress"
+
+    - name: "PCI DSS (if applicable)"
+      scope: "No payment card data stored"
+      status: "not_applicable"
+
+# Security Checklist for Production Deployment
+deployment_checklist:
+  pre_deployment:
+    - "All secrets rotated and securely stored"
+    - "TLS certificates issued and configured"
+    - "Firewall rules applied"
+    - "Database users created with minimal privileges"
+    - "Rate limiting configured"
+    - "CORS policies set"
+    - "Monitoring and alerting active"
+
+  post_deployment:
+    - "Security scan passed"
+    - "Penetration testing completed"
+    - "Audit logging verified"
+    - "Backup tested successfully"
+    - "Incident response plan reviewed"
+    - "Team trained on security procedures"
+
+# Incident Response Plan
+incident_response:
+  phases:
+    - "Detection: Automated monitoring alerts"
+    - "Analysis: Security team investigation"
+    - "Containment: Isolate affected systems"
+    - "Eradication: Remove threat"
+    - "Recovery: Restore normal operations"
+    - "Lessons Learned: Post-incident review"
+
+  contacts:
+    security_team: "security@unmogrowp.com"
+    on_call: "PagerDuty rotation"
+    escalation: "CTO -> CEO"
+
+  tools:
+    - "Slack #security-incidents"
+    - "Grafana dashboards"
+    - "Jaeger distributed tracing"
+    - "Log aggregation (ELK/Loki)"
+
+# Regular Security Maintenance
+maintenance_schedule:
+  daily:
+    - "Automated vulnerability scans"
+    - "Log review (automated)"
+    - "Backup verification"
+
+  weekly:
+    - "Security metrics review"
+    - "Failed authentication analysis"
+    - "Certificate expiry checks"
+
+  monthly:
+    - "Access review"
+    - "Security training"
+    - "DR drill"
+    - "Compliance audit"
+
+  quarterly:
+    - "Penetration testing"
+    - "Security policy review"
+    - "Vendor security assessment"
+    - "Secrets rotation"
+
+# Security Metrics Targets
+security_kpis:
+  authentication_success_rate: ">99%"
+  mean_time_to_detect: "<5 minutes"
+  mean_time_to_respond: "<30 minutes"
+  false_positive_rate: "<5%"
+  patch_deployment_time: "<24 hours for critical"
+  backup_success_rate: "100%"

@@ -1,189 +1,259 @@
 <script lang="ts">
-  // Svelte 5 Runes API - эквивалент useState из React
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+
   let email = $state('');
   let password = $state('');
+  let loading = $state(false);
+  let error = $state<string | null>(null);
   let rememberMe = $state(false);
-  let isLoading = $state(false);
-  let recaptchaToken = $state<string | null>(null);
-  let recaptchaRef: any;
 
-  async function handleSubmit(e: Event) {
+  onMount(() => {
+    // Check if already authenticated
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      goto('/dashboard');
+    }
+
+    // Check for remembered email
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    if (rememberedEmail) {
+      email = rememberedEmail;
+      rememberMe = true;
+    }
+  });
+
+  async function handleLogin(e: Event) {
     e.preventDefault();
 
-    if (!recaptchaToken) {
-      alert('Пожалуйста, подтвердите что вы не робот');
+    if (!email || !password) {
+      error = 'Please enter both email and password';
       return;
     }
 
-    isLoading = true;
+    loading = true;
+    error = null;
 
-    // TODO: Implement actual email/password login logic
-    console.log('Login attempt:', { email, password, rememberMe, recaptchaToken });
-
-    setTimeout(() => {
-      isLoading = false;
-      if (recaptchaRef) {
-        recaptchaRef.reset();
-      }
-      recaptchaToken = null;
-    }, 1000);
-  }
-
-  async function handleGoogleLogin() {
-    if (!recaptchaToken) {
-      alert('Пожалуйста, подтвердите что вы не робот');
-      return;
-    }
-
-    isLoading = true;
     try {
-      // TODO: Implement Auth.js signIn with Google
-      console.log('Google login attempt');
-      // await signIn('google', { callbackUrl: '/dashboard' });
-    } catch (error) {
-      console.error('Google login error:', error);
-      isLoading = false;
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3003';
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Login failed');
+      }
+
+      const data = await response.json();
+
+      // Store authentication token
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('user_id', data.user.id);
+      localStorage.setItem('user_email', data.user.email);
+      localStorage.setItem('user_role', data.user.role);
+      localStorage.setItem('organization_id', data.user.organization_id);
+
+      // Handle remember me
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
+
+      // Redirect to dashboard
+      goto('/dashboard');
+
+    } catch (err: any) {
+      console.error('Login error:', err);
+      error = err.message || 'An error occurred during login';
+    } finally {
+      loading = false;
     }
   }
 
-  function onRecaptchaChange(token: string | null) {
-    recaptchaToken = token;
+  function handleGoogleLogin() {
+    // TODO: Implement Google OAuth
+    error = 'Google login coming soon';
+  }
+
+  function handleGitHubLogin() {
+    // TODO: Implement GitHub OAuth
+    error = 'GitHub login coming soon';
   }
 </script>
 
-<div class="min-h-screen flex items-center justify-center p-5" style="background: rgb(109, 140, 248);">
-  <div class="w-full max-w-[420px]">
-    <!-- Logo -->
-    <div class="text-center mb-12 flex items-center justify-center gap-0 relative">
-      <!-- Background Circle -->
-      <div class="absolute w-[140px] h-[140px] rounded-full left-1/2 -translate-x-full z-0" style="background: rgba(255, 255, 255, 0.15);"></div>
+<svelte:head>
+  <title>Login - UnMoGrowP Attribution</title>
+</svelte:head>
 
-      <span class="text-white text-[42px] font-bold tracking-tight relative z-[1]">UnMo</span>
-
-      <!-- White Circle with GrowP -->
-      <div class="w-[140px] h-[140px] bg-white rounded-full inline-flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.1)] relative z-[2]">
-        <span class="text-[42px] font-bold tracking-tight" style="color: rgb(109, 140, 248);">GrowP</span>
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Logo and Title -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl mb-4 shadow-lg">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
       </div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        UnMoGrowP Attribution
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400">
+        Enterprise Multi-Touch Attribution Platform
+      </p>
     </div>
 
     <!-- Login Card -->
-    <div class="bg-white rounded-lg shadow-[0_20px_60px_rgba(0,0,0,0.15)] p-12">
-      <h1 class="text-center text-lg font-normal text-[#1a202c] mb-8">
-        Login to your account
-      </h1>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+        Sign in to your account
+      </h2>
 
-      <!-- Form -->
-      <form onsubmit={handleSubmit}>
-        <!-- Email Field with Floating Label -->
-        <div class="relative mb-5">
+      {#if error}
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p class="text-sm font-medium text-red-900 dark:text-red-100">Error</p>
+              <p class="text-sm text-red-700 dark:text-red-300 mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      {/if}
+
+      <!-- Login Form -->
+      <form onsubmit={handleLogin} class="space-y-5">
+        <!-- Email Field -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Email Address
+          </label>
           <input
             type="email"
             id="email"
-            placeholder=" "
             bind:value={email}
+            placeholder="you@company.com"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             required
-            disabled={isLoading}
-            class="peer w-full h-12 px-4 border border-[#e2e8f0] rounded text-[15px] text-[#1a202c] transition-colors focus:outline-none focus:border-[rgb(109,140,248)] placeholder:text-transparent"
+            disabled={loading}
           />
-          <label
-            for="email"
-            class="absolute left-4 top-[14px] text-[#a0aec0] text-[15px] pointer-events-none transition-all duration-200 bg-white px-1
-            peer-focus:top-[-8px] peer-focus:left-3 peer-focus:text-xs peer-focus:text-[rgb(109,140,248)]
-            peer-[:not(:placeholder-shown)]:top-[-8px] peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-[rgb(109,140,248)]"
-          >
-            Email Address *
-          </label>
         </div>
 
-        <!-- Password Field with Floating Label -->
-        <div class="relative mb-5">
+        <!-- Password Field -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Password
+          </label>
           <input
             type="password"
             id="password"
-            placeholder=" "
             bind:value={password}
+            placeholder="Enter your password"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
             required
-            disabled={isLoading}
-            class="peer w-full h-12 px-4 border border-[#e2e8f0] rounded text-[15px] text-[#1a202c] transition-colors focus:outline-none focus:border-[rgb(109,140,248)] placeholder:text-transparent"
+            disabled={loading}
           />
-          <label
-            for="password"
-            class="absolute left-4 top-[14px] text-[#a0aec0] text-[15px] pointer-events-none transition-all duration-200 bg-white px-1
-            peer-focus:top-[-8px] peer-focus:left-3 peer-focus:text-xs peer-focus:text-[rgb(109,140,248)]
-            peer-[:not(:placeholder-shown)]:top-[-8px] peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-[rgb(109,140,248)]"
-          >
-            Password *
-          </label>
         </div>
 
-        <!-- Remember Me -->
-        <div class="flex items-center mb-5">
-          <input
-            type="checkbox"
-            id="remember"
-            bind:checked={rememberMe}
-            class="w-4 h-4 mr-2 cursor-pointer"
-          />
-          <label for="remember" class="text-sm text-[#4a5568] cursor-pointer select-none">
-            Remember me
+        <!-- Remember Me & Forgot Password -->
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              bind:checked={rememberMe}
+              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+              disabled={loading}
+            />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Remember me</span>
           </label>
+          <a href="/forgot-password" class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+            Forgot password?
+          </a>
         </div>
 
-        <!-- Sign In Button -->
+        <!-- Submit Button -->
         <button
           type="submit"
-          disabled={isLoading}
-          class="w-full h-12 text-white border-none rounded text-[15px] font-medium cursor-pointer transition-all duration-200 mb-4 active:scale-[0.98] disabled:opacity-50 hover:bg-[rgb(38,65,122)] active:bg-[rgb(28,50,97)]"
-          style="background: rgb(48, 80, 147);"
+          disabled={loading}
+          class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {#if loading}
+            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Signing in...
+          {:else}
+            Sign in
+          {/if}
         </button>
       </form>
 
-      <!-- Google Login Button -->
-      <button
-        type="button"
-        onclick={handleGoogleLogin}
-        disabled={isLoading || !recaptchaToken}
-        class="w-full h-12 bg-white border border-[#e2e8f0] rounded text-sm text-[#4a5568] cursor-pointer transition-colors flex items-center justify-center gap-3 mb-6 hover:bg-[#f7fafc] disabled:opacity-50"
-      >
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        <span>Вход через аккаунт Google</span>
-      </button>
-
-      <!-- Google reCAPTCHA Placeholder -->
-      <div class="flex justify-center mb-6">
-        <div class="text-sm text-gray-500">
-          [reCAPTCHA будет здесь]
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
         </div>
       </div>
 
-      <!-- Footer Links -->
-      <div class="flex items-center justify-between">
-        <a
-          href="#"
-          class="text-sm transition-colors hover:text-[rgb(48,80,147)]"
-          style="color: rgb(109, 140, 248);"
+      <!-- Social Login Buttons -->
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onclick={handleGoogleLogin}
+          disabled={loading}
+          class="py-3 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Forgot password?
-        </a>
-        <a
-          href="#"
-          class="text-sm transition-colors hover:text-[rgb(48,80,147)]"
-          style="color: rgb(109, 140, 248);"
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
+        </button>
+
+        <button
+          type="button"
+          onclick={handleGitHubLogin}
+          disabled={loading}
+          class="py-3 px-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Don't have an account? Sign Up
-        </a>
+          <svg class="w-5 h-5 text-gray-900 dark:text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-300">GitHub</span>
+        </button>
       </div>
+
+      <!-- Sign Up Link -->
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Don't have an account?
+          <a href="/register" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium ml-1">
+            Sign up for free
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+      <p>
+        By signing in, you agree to our
+        <a href="/terms" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">Terms of Service</a>
+        and
+        <a href="/privacy" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">Privacy Policy</a>
+      </p>
     </div>
   </div>
 </div>
-
-<style>
-  /* Additional Svelte-specific styles if needed */
-</style>

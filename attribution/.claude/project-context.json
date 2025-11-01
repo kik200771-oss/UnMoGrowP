@@ -1,0 +1,99 @@
+{
+  "projectContext": {
+    "name": "UnMoGrowP Attribution Platform",
+    "version": "v0.3.0-ai-agents",
+    "status": "AI-Augmented Development Phase",
+    "lastUpdate": "2025-10-22",
+    "description": "Production-ready mobile attribution platform with AI agent acceleration",
+    "architecture": {
+      "type": "Microservices + Monorepo",
+      "frontend": "Svelte 5 + Bun + TanStack Query",
+      "backend": "Go + Fiber + Kafka + ClickHouse + PostgreSQL",
+      "infrastructure": "Kubernetes + Docker + CI/CD",
+      "performance": "10M events/sec processing capability"
+    },
+    "aiAgents": {
+      "count": 5,
+      "status": "Active and Integrated - MVP Development Phase",
+      "agents": [
+        {
+          "name": "Architecture Agent",
+          "role": "Senior System Architect AI",
+          "location": "tools/agents/architecture/",
+          "capabilities": ["System design", "Code review", "Tech debt management"],
+          "integrationStatus": "Active"
+        },
+        {
+          "name": "Go Code Agent",
+          "role": "Senior Go Developer AI",
+          "location": "tools/agents/go-code/",
+          "capabilities": ["Performance optimization", "Microservice generation", "10M events/sec processing"],
+          "integrationStatus": "Active - MVP Development"
+        },
+        {
+          "name": "Testing Agent",
+          "role": "QA Lead + Automation QA AI",
+          "location": "tools/agents/testing/",
+          "capabilities": ["Test automation", "Load testing", "E2E validation"],
+          "integrationStatus": "Active"
+        },
+        {
+          "name": "DevOps Agent",
+          "role": "Platform Engineer + SRE AI",
+          "location": "tools/agents/devops/",
+          "capabilities": ["Infrastructure automation", "Monitoring", "Capacity planning"],
+          "integrationStatus": "Active"
+        },
+        {
+          "name": "Product Manager Agent",
+          "role": "Senior Product Manager + Business Strategy AI",
+          "location": "tools/agents/product-manager/",
+          "capabilities": ["Product strategy", "Market analysis", "Feature prioritization", "Business metrics"],
+          "integrationStatus": "Active - Strategic Planning"
+        }
+      ]
+    },
+    "team": {
+      "composition": "50 people + 5 AI Agents",
+      "workflow": "AI-augmented development with human validation",
+      "skillGapsRisk": "Reduced from Medium to Low (AI augmentation)",
+      "currentFocus": "MVP Development Sprint - Event Ingestion & Attribution Engine"
+    },
+    "keyFiles": [
+      "DOCUMENTS/03_Future_Proof_Architecture_Greenfield_Attribution_Platform.md",
+      "tools/agents/*/agent.ts",
+      "tools/agents/*/docs/README.md",
+      ".claude/project-context.json"
+    ],
+    "recentChanges": [
+      {
+        "date": "2025-10-22",
+        "change": "Created comprehensive AI agent framework",
+        "impact": "Accelerated development capabilities",
+        "commit": "4d4e70b"
+      },
+      {
+        "date": "2025-10-22",
+        "change": "Added Product Manager Agent and strategic recommendations",
+        "impact": "Defined MVP Development Sprint priorities",
+        "commit": "pending"
+      }
+    ],
+    "currentSprint": {
+      "phase": "MVP Development Sprint",
+      "duration": "2-4 weeks",
+      "objectives": [
+        "Event Ingestion API (100K events/sec)",
+        "Basic Attribution Engine (First-touch, Last-touch)",
+        "Dashboard MVP with core metrics",
+        "Load testing framework"
+      ],
+      "activeAgents": ["Go Code Agent", "Architecture Agent", "Testing Agent", "DevOps Agent"],
+      "targetMetrics": {
+        "performance": "100K events/sec processing",
+        "latency": "<100ms P95",
+        "attribution_accuracy": ">99%"
+      }
+    }
+  }
+}
