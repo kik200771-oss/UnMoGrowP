@@ -1,0 +1,41 @@
+name: 🧪 Exact Copy Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of test to run'
+        required: false
+        default: 'basic'
+        type: choice
+        options:
+        - basic
+        - advanced
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      actions: read
+
+    steps:
+      - name: 🔍 Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 30
+
+      - name: 📅 Setup Environment
+        run: |
+          echo "TEST_DATE=$(date +%F)" >> $GITHUB_ENV
+          echo "TEST_TIME=$(date +%H:%M)" >> $GITHUB_ENV
+          mkdir -p test-output
+
+      - name: 🧪 Run Test
+        run: |
+          echo "✅ Exact copy test completed successfully!"
+          echo "Test date: $TEST_DATE"
+          echo "Test time: $TEST_TIME"

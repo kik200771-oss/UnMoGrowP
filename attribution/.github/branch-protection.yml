@@ -1,0 +1,38 @@
+# Branch Protection Rules Configuration
+# Apply via GitHub Settings > Branches
+
+main:
+  protection:
+    required_status_checks:
+      strict: true
+      contexts:
+        - "CI/CD Pipeline / Frontend (Svelte 5)"
+        - "CI/CD Pipeline / API (Bun + Hono)"
+        - "CI/CD Pipeline / Backend (Go)"
+        - "CI/CD Pipeline / Security Scan"
+        - "CI/CD Pipeline / Docker Compose"
+    enforce_admins: true
+    required_pull_request_reviews:
+      required_approving_review_count: 2
+      dismiss_stale_reviews: true
+      require_code_owner_reviews: true
+    restrictions:
+      users: []
+      teams: ["platform-team", "senior-developers"]
+    allow_force_pushes: false
+    allow_deletions: false
+
+feature/migrate-to-svelte:
+  protection:
+    required_status_checks:
+      strict: true
+      contexts:
+        - "CI/CD Pipeline / Frontend (Svelte 5)"
+        - "CI/CD Pipeline / API (Bun + Hono)"
+        - "CI/CD Pipeline / Backend (Go)"
+    enforce_admins: false
+    required_pull_request_reviews:
+      required_approving_review_count: 1
+      dismiss_stale_reviews: true
+    allow_force_pushes: true
+    allow_deletions: false

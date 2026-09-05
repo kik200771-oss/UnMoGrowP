@@ -1,0 +1,249 @@
+UnMoGrowP Attribution Platform - Dockerfile Templates Summary
+==============================================================
+
+DOCKERFILE TEMPLATES FOR ALL SERVICES
+
+1. API GATEWAY (Go) - docker/api-gateway/Dockerfile
+   Entry: cmd/api-gateway/main.go
+   Base: golang:1.25-alpine -> alpine:3.18
+   Ports: 8080, 8081
+
+2. INGESTION SERVICE (Go) - docker/ingestion-service/Dockerfile
+   Entry: services/ingestion/main.go
+   Base: golang:1.25-alpine -> alpine:3.18
+   Ports: 8080, 8081
+
+3. ATTRIBUTION SERVICE (Go) - docker/attribution-service/Dockerfile
+   Entry: services/attribution/engine.go
+   Base: golang:1.25-alpine -> alpine:3.18
+   Ports: 8082, 8083
+
+4. METRICS SERVICE (Go) - docker/metrics-service/Dockerfile
+   Entry: services/metrics/customer-success-tracker.go
+   Base: golang:1.25-alpine -> alpine:3.18
+   Port: 8084
+   (Dockerfile already exists at services/metrics/Dockerfile)
+
+5. TYPESCRIPT API GATEWAY (Bun) - docker/typescript-api-gateway/Dockerfile
+   Entry: apps/api-gateway/index.ts
+   Base: oven/bun:latest
+   Port: 3000
+
+6. ANALYTICS API (Python) - docker/analytics-api/Dockerfile
+   Entry: ml-services/analytics-api/main.py
+   Base: python:3.11-slim
+   Port: 8085
+
+7. ATTRIBUTION ML (Python) - docker/attribution-ml/Dockerfile
+   Entry: ml-services/attribution-ml/main.py
+   Base: python:3.11-slim
+   Port: 8086
+
+8. FRAUD DETECTION (Python) - docker/fraud-detection/Dockerfile
+   Entry: ml-services/fraud-detection/main.py
+   Base: python:3.11-slim
+   Port: 8087
+
+9. LTV PREDICTION (Python) - docker/ltv-prediction/Dockerfile
+   Entry: ml-services/ltv-prediction/main.py
+   Base: python:3.11-slim
+   Port: 8088
+
+10. FRONTEND (Svelte) - docker/frontend/Dockerfile
+    Entry: frontend/src/app.html
+    Base: node:20-alpine -> node:20-alpine
+    Port: 3000
+
+GO SERVICES - Standard Multi-Stage Build Pattern:
+
+```
+FROM golang:1.25-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache git ca-certificates
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -o service-name ./entry/point.go
+
+FROM alpine:3.18
+RUN apk --no-cache add ca-certificates curl
+RUN adduser -D -s /bin/sh attribution
+WORKDIR /app
+COPY --from=builder /app/service-name .
+RUN mkdir -p logs && chown -R attribution:attribution /app
+USER attribution
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8080/health
+CMD ["./service-name"]
+```
+
+PYTHON SERVICES - FastAPI Pattern:
+
+```
+FROM python:3.11-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ curl ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+RUN useradd -m -s /bin/bash mluser && chown -R mluser:mluser /app
+USER mluser
+EXPOSE 8085
+HEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:8085/health
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8085"]
+```
+
+TYPESCRIPT BUN SERVICE - Build Pattern:
+
+```
+FROM oven/bun:latest AS builder
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun build ./index.ts --outdir dist
+
+FROM oven/bun:latest
+WORKDIR /app
+RUN useradd -m -s /bin/bash appuser
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+RUN chown -R appuser:appuser /app
+USER appuser
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=10s CMD curl -f http://localhost:3000/health
+CMD ["bun", "run", "dist/index.js"]
+```
+
+SVELTE FRONTEND - Build Pattern:
+
+```
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache python3 make g++
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && adduser -S appuser -u 1001 -G nodejs
+COPY --from=builder --chown=appuser:nodejs /app/build ./build
+COPY --from=builder --chown=appuser:nodejs /app/package*.json ./
+RUN npm ci --prod
+USER appuser
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=10s CMD wget --no-verbose --tries=1 --spider http://localhost:3000
+CMD ["node", "build/index.js"]
+```
+
+KEY BUILD PARAMETERS:
+
+Go Services:
+- CGO_ENABLED=0 (No C dependencies)
+- GOOS=linux, GOARCH=amd64 (Linux 64-bit)
+- -ldflags='-w -s' (Strip symbols, reduce size)
+- -extldflags "-static" (Static linking)
+- Typical binary size: 20-30 MB
+
+Python Services:
+- python:3.11-slim (lightweight base, 150 MB)
+- pip --no-cache-dir (skip cache, save space)
+- Typical image size: 800 MB - 1 GB
+
+TypeScript Bun:
+- oven/bun:latest (lightweight, 80-100 MB)
+- --frozen-lockfile (reproducible builds)
+- Typical image size: 150-200 MB
+
+Frontend:
+- Multi-stage build (separate build and runtime)
+- npm ci (clean install, deterministic)
+- Production dependencies only
+- Typical image size: 50-80 MB
+
+BEST PRACTICES:
+
+1. Multi-stage builds (70-80% size reduction)
+2. Alpine base images (5-10 MB vs 100+ MB)
+3. Non-root users (security)
+4. HEALTHCHECK on all services
+5. .dockerignore for clean context
+6. Layer caching optimization
+7. Explicit port exposure
+8. Environment variable documentation
+9. Volume mounts for data persistence
+10. Resource limits in compose files
+
+IMAGE SIZE ESTIMATES (After optimization):
+
+Go services: 20-30 MB each
+Python services: 800 MB - 1 GB each
+TypeScript service: 150-200 MB
+Frontend: 50-80 MB
+Total platform: ~3.5-4 GB
+
+DOCKER COMPOSE PORT MAPPING:
+
+8080 - API Gateway
+8081 - API Gateway Metrics / Adminer (dev)
+8082 - Attribution Service / Kafka UI (dev)
+8083 - Attribution Metrics / Redis Commander (dev)
+8084 - Metrics Service
+8085+ - ML Services (Analytics, Attribution-ML, Fraud, LTV)
+3000 - Web UI / Grafana
+5173 - Frontend dev server
+8123 - ClickHouse HTTP
+9000 - ClickHouse Native
+5432 - PostgreSQL
+6379 - Redis
+9092 - Kafka
+2181 - Zookeeper
+9090 - Prometheus
+16686 - Jaeger
+
+DIRECTORY STRUCTURE FOR DOCKERFILES:
+
+docker/
+├── api-gateway/
+│   ├── Dockerfile
+│   └── Dockerfile.dev (optional)
+├── ingestion-service/
+│   └── Dockerfile
+├── attribution-service/
+│   └── Dockerfile
+├── metrics-service/
+│   └── Dockerfile
+├── typescript-api-gateway/
+│   └── Dockerfile
+├── analytics-api/
+│   └── Dockerfile
+├── attribution-ml/
+│   └── Dockerfile
+├── fraud-detection/
+│   └── Dockerfile
+├── ltv-prediction/
+│   └── Dockerfile
+├── frontend/
+│   └── Dockerfile
+├── prometheus/
+│   └── prometheus.yml
+├── grafana/
+│   ├── provisioning/
+│   └── dashboards/
+├── nginx/
+│   ├── nginx.conf
+│   └── conf.d/
+├── redis/
+│   └── redis.conf
+├── clickhouse/
+│   ├── config.xml
+│   └── users.xml
+└── .dockerignore
+
+Created: 2025-10-23

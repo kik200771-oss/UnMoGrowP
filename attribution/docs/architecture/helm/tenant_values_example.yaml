@@ -1,0 +1,21 @@
+tenantId: "t123"
+domain: "client123.unmogrow.com"
+
+backend:
+  image: "ghcr.io/unmogrowp/backend:1.2.0"
+  env:
+    - name: TENANT_ID
+      value: "t123"
+    - name: PG_DSN
+      valueFrom: secretRef: pg_t123
+
+frontend:
+  image: "ghcr.io/unmogrowp/frontend:1.2.0"
+  env:
+    - name: TENANT_ID
+      value: "t123"
+
+redis:
+  namespace: "t123"
+  persistence:
+    enabled: false

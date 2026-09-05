@@ -1,0 +1,56 @@
+# Global ownership - All code requires review
+* @kik200771-oss
+
+# Documentation
+/docs/ @kik200771-oss
+*.md @kik200771-oss
+SECURITY.md @kik200771-oss
+
+# Frontend Applications
+/apps/web-ui/ @kik200771-oss
+/frontend/ @kik200771-oss
+*.svelte @kik200771-oss
+*.ts @kik200771-oss
+*.js @kik200771-oss
+
+# API Gateway
+/apps/api-gateway/ @kik200771-oss
+/api/ @kik200771-oss
+
+# Backend Services
+/services/ @kik200771-oss
+*.go @kik200771-oss
+go.mod @kik200771-oss
+go.sum @kik200771-oss
+
+# Machine Learning Services
+/ml-services/ @kik200771-oss
+*.py @kik200771-oss
+requirements.txt @kik200771-oss
+
+# Infrastructure & DevOps
+/infrastructure/ @kik200771-oss
+/deployment/ @kik200771-oss
+docker-compose.yml @kik200771-oss
+Dockerfile @kik200771-oss
+*.k8s.yml @kik200771-oss
+*.kubernetes.yml @kik200771-oss
+
+# CI/CD Pipeline - Critical for production
+/.github/ @kik200771-oss
+.github/workflows/ @kik200771-oss
+
+# Database & Security - Requires careful review
+/database/ @kik200771-oss
+*.sql @kik200771-oss
+
+# Configuration Files - Sensitive settings
+*.json @kik200771-oss
+*.yml @kik200771-oss
+*.yaml @kik200771-oss
+.env.example @kik200771-oss
+
+# Tests & Quality Assurance
+/tests/ @kik200771-oss
+/scripts/ @kik200771-oss
+*.test.* @kik200771-oss

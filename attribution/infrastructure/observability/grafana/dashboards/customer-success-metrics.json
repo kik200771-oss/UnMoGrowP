@@ -1,0 +1,472 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "unmogrowp-customer-success",
+    "title": "UnMoGrowP Customer Success Metrics - Pilot Program",
+    "tags": ["unmogrowp", "customer", "success", "pilot", "week1"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    "editable": true,
+    "graphTooltip": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Week 1 Sprint Goals - Customer Count",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_pilot_customers",
+            "legendFormat": "Pilot Customers",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 3},
+                {"color": "green", "value": 5}
+              ]
+            },
+            "mappings": [],
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center"
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Customer Satisfaction (Target: >90%)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(customer_satisfaction_score)",
+            "legendFormat": "Avg Satisfaction",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Attribution Accuracy (Target: >99%)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(attribution_accuracy_percent)",
+            "legendFormat": "Avg Accuracy",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "min": 90,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 95},
+                {"color": "green", "value": 99}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Successful Customers (Technical + Business Success)",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "successful_pilot_customers",
+            "legendFormat": "Successful",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 2},
+                {"color": "green", "value": 4}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center"
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Customer Satisfaction by Company",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "customer_satisfaction_score",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6}
+      },
+      {
+        "id": 6,
+        "title": "Cost Savings by Customer (Target: 30-50%)",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "customer_cost_savings_percent",
+            "legendFormat": "{{customer_id}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 60,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 20},
+                {"color": "green", "value": 30}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6}
+      },
+      {
+        "id": 7,
+        "title": "Customer API Latency - P95 (Target: <100ms)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "customer_api_latency_ms{percentile=\"p95\"}",
+            "legendFormat": "{{customer_id}}",
+            "refId": "A"
+          },
+          {
+            "expr": "100",
+            "legendFormat": "Target (100ms)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Latency (ms)",
+            "format": "ms",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14}
+      },
+      {
+        "id": 8,
+        "title": "Attribution Accuracy by Customer",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "attribution_accuracy_percent",
+            "legendFormat": "{{customer_id}}",
+            "refId": "A"
+          },
+          {
+            "expr": "99",
+            "legendFormat": "Target (99%)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Accuracy %",
+            "format": "percent",
+            "min": 95,
+            "max": 100
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14}
+      },
+      {
+        "id": 9,
+        "title": "Pilot Program Progress - Week 1 Goals",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "customer_satisfaction_score",
+            "legendFormat": "{{customer_id}} - {{company_name}}",
+            "refId": "A",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "customer_id": "Customer ID",
+                "company_name": "Company",
+                "Value": "Satisfaction %"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 22}
+      },
+      {
+        "id": 10,
+        "title": "Business Impact Metrics",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(customer_cost_savings_percent)",
+            "legendFormat": "Avg Cost Savings %",
+            "refId": "A"
+          },
+          {
+            "expr": "total_pilot_customers * 2500",
+            "legendFormat": "Estimated MRR ($)",
+            "refId": "B"
+          },
+          {
+            "expr": "(successful_pilot_customers / total_pilot_customers) * 100",
+            "legendFormat": "Success Rate %",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "yellow", "value": null},
+                {"color": "green", "value": 50}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Estimated MRR ($)"},
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "currencyUSD"
+                },
+                {
+                  "id": "decimals",
+                  "value": 0
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 30}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\"Customer.*\",alertstate=\"firing\"}",
+          "iconColor": "rgba(255, 96, 96, 1)",
+          "name": "Customer Alerts",
+          "step": "60s",
+          "tagKeys": "customer_id,alertname",
+          "textFormat": "{{alertname}} - {{customer_id}}",
+          "titleFormat": "Customer Alert"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": "Prometheus",
+          "definition": "label_values(customer_satisfaction_score, customer_id)",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Customer",
+          "multi": false,
+          "name": "customer_id",
+          "options": [],
+          "query": "label_values(customer_satisfaction_score, customer_id)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "tagValuesQuery": "",
+          "tags": [],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
+        }
+      ]
+    }
+  }
+}

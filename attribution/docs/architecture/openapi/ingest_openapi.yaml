@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: UnMoGrowP Event Ingest API
+  version: 1.0.0
+  description: API для приёма событий с фронтенда и бэкенда клиентов (tenants)
+
+paths:
+  /api/v1/events/ingest:
+    post:
+      summary: Ingest event
+      operationId: ingestEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/event.install.json'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+servers:
+  - url: https://api.unmogrow.com
+    description: Global Ingest Gateway

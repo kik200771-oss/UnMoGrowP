@@ -1,0 +1,54 @@
+{
+  "recommendations": [
+    // Svelte 5 (NEW STACK)
+    "svelte.svelte-vscode",                // Svelte for VS Code
+
+    // Go (NEW STACK)
+    "golang.go",                           // Go
+
+    // Основные для разработки
+    "dbaeumer.vscode-eslint",              // ESLint
+    "esbenp.prettier-vscode",              // Prettier
+    "bradlc.vscode-tailwindcss",           // Tailwind CSS IntelliSense
+
+    // TypeScript
+    "pmneo.tsimporter",                    // TypeScript Importer
+    "ms-vscode.vscode-typescript-next",    // TypeScript Nightly
+
+    // Git
+    "eamodio.gitlens",                     // GitLens
+    "mhutchie.git-graph",                  // Git Graph
+
+    // Docker & DevOps
+    "ms-azuretools.vscode-docker",         // Docker
+    "ms-kubernetes-tools.vscode-kubernetes-tools", // Kubernetes
+    "redhat.vscode-yaml",                  // YAML
+
+    // Базы данных
+    "mtxr.sqltools",                       // SQLTools
+    "cweijan.vscode-redis-client",         // Redis Client
+
+    // Productivity
+    "christian-kohler.path-intellisense",  // Path Intellisense
+    "formulahendry.auto-rename-tag",       // Auto Rename Tag
+    "usernamehw.errorlens",                // Error Lens
+    "gruntfuggly.todo-tree",               // Todo Tree
+
+    // API Testing
+    "humao.rest-client",                   // REST Client
+    "rangav.vscode-thunder-client",        // Thunder Client
+
+    // Code Quality
+    "sonarsource.sonarlint-vscode",        // SonarLint
+    "aaron-bond.better-comments",          // Better Comments
+    "streetsidesoftware.code-spell-checker", // Code Spell Checker
+
+    // Markdown
+    "yzhang.markdown-all-in-one",          // Markdown All in One
+    "bierner.markdown-mermaid",            // Markdown Mermaid
+
+    // Theme
+    "pkief.material-icon-theme",           // Material Icon Theme
+    "zhuangtongfa.material-theme"          // One Dark Pro
+  ]
+}
