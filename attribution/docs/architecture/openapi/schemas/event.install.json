@@ -1,0 +1,15 @@
+{
+  "$id": "https://unmogrow/schemas/event.install.json",
+  "type": "object",
+  "required": ["eventId", "tenantId", "timestamp", "deviceId", "campaign"],
+  "properties": {
+    "eventId": {"type": "string", "format": "uuid"},
+    "tenantId": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"},
+    "deviceId": {"type": "string"},
+    "campaign": {"type": "string"},
+    "source": {"type": "string", "enum": ["ad_network", "organic", "cross"]},
+    "metadata": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": false
+}

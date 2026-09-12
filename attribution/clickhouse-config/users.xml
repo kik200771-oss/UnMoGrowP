@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <users>
+        <default>
+            <!-- SECURE: Password from environment variable -->
+            <password>${CLICKHOUSE_PASSWORD}</password>
+            <networks>
+                <!-- SECURE: Only localhost access -->
+                <ip>127.0.0.1</ip>
+                <ip>::1</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </default>
+    </users>
+</clickhouse>
