@@ -1,0 +1,92 @@
+# UnMoGrowP Grafana Data Sources Configuration
+# Auto-provisioned data sources for complete observability
+
+apiVersion: 1
+
+datasources:
+  # Prometheus - Metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.48.0
+      cacheLevel: 'High'
+
+  # Loki - Logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: jaeger
+          matcherRegex: '"trace_id":"([^"]*)"'
+          name: TraceID
+          url: '$${__value.raw}'
+
+  # Jaeger - Distributed Tracing
+  - name: Jaeger
+    type: jaeger
+    uid: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags: ['job', 'instance', 'pod', 'namespace']
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: 'method="${__span.tags.method}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$${__tags}}[5m]))'
+      nodeGraph:
+        enabled: true
+
+  # ClickHouse - Attribution Data (if metrics endpoint is available)
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource
+    access: proxy
+    url: http://host.docker.internal:8123
+    editable: false
+    jsonData:
+      defaultDatabase: default
+      username: default
+    secureJsonData:
+      password: '${CLICKHOUSE_PASSWORD}'
+
+# Notification channels (for alerts)
+notifiers:
+  - name: slack-alerts
+    type: slack
+    uid: slack
+    settings:
+      url: ${SLACK_WEBHOOK_URL}
+      username: UnMoGrowP-Alerts
+      channel: '#alerts'
+      iconEmoji: ':exclamation:'
+      title: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+      text: |
+        {{ range .Alerts }}
+        **Alert:** {{ .Annotations.summary }}
+        **Description:** {{ .Annotations.description }}
+        **Severity:** {{ .Labels.severity }}
+        **Instance:** {{ .Labels.instance }}
+        {{ end }}

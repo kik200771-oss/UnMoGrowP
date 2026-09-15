@@ -1,0 +1,548 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "unmogrowp-onboarding",
+    "title": "UnMoGrowP Customer Onboarding - Pilot Program Tracking",
+    "tags": ["unmogrowp", "onboarding", "pilot", "customer-journey"],
+    "timezone": "browser",
+    "refresh": "1m",
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    },
+    "editable": true,
+    "graphTooltip": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Onboarding Pipeline - Week 1 Target: 5 Customers",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"discovery\"})",
+            "legendFormat": "Discovery",
+            "refId": "A"
+          },
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"setup\"})",
+            "legendFormat": "Setup",
+            "refId": "B"
+          },
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"launch\"})",
+            "legendFormat": "Launched",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto"
+        },
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Time to Launch (Days) - Target: <14 Days",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "avg(customer_integration_days)",
+            "legendFormat": "Avg Time to Launch",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "d",
+            "decimals": 1,
+            "min": 0,
+            "max": 21,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 14},
+                {"color": "red", "value": 21}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Support Tickets per Customer",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(customer_support_tickets)",
+            "legendFormat": "Avg Support Tickets",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 10}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "area"
+        },
+        "gridPos": {"h": 6, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Customer Onboarding Funnel",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"discovery\"}) by (current_phase)",
+            "legendFormat": "Discovery Phase",
+            "refId": "A"
+          },
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"setup\"}) by (current_phase)",
+            "legendFormat": "Setup Phase",
+            "refId": "B"
+          },
+          {
+            "expr": "count(customer_satisfaction_score{current_phase=\"launch\"}) by (current_phase)",
+            "legendFormat": "Launch Phase",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Customer Count",
+            "format": "short",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 5,
+        "linewidth": 2,
+        "stack": false,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6}
+      },
+      {
+        "id": 5,
+        "title": "Customer Health Score Over Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "customer_satisfaction_score",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          },
+          {
+            "expr": "90",
+            "legendFormat": "Target (90%)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Satisfaction Score",
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6}
+      },
+      {
+        "id": 6,
+        "title": "Technical Success Rate by Customer",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "customer_technical_success",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "max": 1,
+            "mappings": [
+              {
+                "options": {
+                  "0": {"text": "Not Met", "color": "red"},
+                  "1": {"text": "Success", "color": "green"}
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14}
+      },
+      {
+        "id": 7,
+        "title": "Business Success Rate by Customer",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "customer_business_success",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "max": 1,
+            "mappings": [
+              {
+                "options": {
+                  "0": {"text": "Not Met", "color": "red"},
+                  "1": {"text": "Success", "color": "green"}
+                },
+                "type": "value"
+              }
+            ],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "green", "value": 1}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient",
+          "showUnfilled": true
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14}
+      },
+      {
+        "id": 8,
+        "title": "Customer Event Volume Trend",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "customer_daily_event_volume",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Daily Events",
+            "format": "short",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22}
+      },
+      {
+        "id": 9,
+        "title": "Peak Events per Second by Customer",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "customer_peak_events_per_second",
+            "legendFormat": "{{company_name}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Events/sec",
+            "format": "ops",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22}
+      },
+      {
+        "id": 10,
+        "title": "Customer Onboarding Status Table",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "customer_satisfaction_score",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "job": true,
+                "instance": true
+              },
+              "indexByName": {
+                "company_name": 0,
+                "customer_id": 1,
+                "current_phase": 2,
+                "Value": 3
+              },
+              "renameByName": {
+                "company_name": "Company",
+                "customer_id": "Customer ID",
+                "current_phase": "Phase",
+                "Value": "Satisfaction %"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Phase"},
+              "properties": [
+                {
+                  "id": "mappings",
+                  "value": [
+                    {
+                      "options": {
+                        "discovery": {"text": "Discovery", "color": "blue"},
+                        "setup": {"text": "Setup", "color": "yellow"},
+                        "launch": {"text": "Launched", "color": "green"}
+                      },
+                      "type": "value"
+                    }
+                  ]
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                }
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Satisfaction %"},
+              "properties": [
+                {
+                  "id": "custom.displayMode",
+                  "value": "gradient-gauge"
+                },
+                {
+                  "id": "unit",
+                  "value": "percent"
+                },
+                {
+                  "id": "min",
+                  "value": 0
+                },
+                {
+                  "id": "max",
+                  "value": 100
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 30}
+      },
+      {
+        "id": 11,
+        "title": "Week 1 Sprint Progress",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "total_pilot_customers / 5 * 100",
+            "legendFormat": "Customer Target Progress",
+            "refId": "A"
+          },
+          {
+            "expr": "(count(customer_satisfaction_score >= 90) / count(customer_satisfaction_score)) * 100",
+            "legendFormat": "Satisfaction Target Progress",
+            "refId": "B"
+          },
+          {
+            "expr": "(successful_pilot_customers / total_pilot_customers) * 100",
+            "legendFormat": "Success Rate",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 1,
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 60},
+                {"color": "green", "value": 80}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "horizontal",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "auto"
+        },
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 40}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "changes(total_pilot_customers[1m]) > 0",
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "New Customer Onboarded",
+          "step": "60s",
+          "textFormat": "New customer added",
+          "titleFormat": "Customer Onboarding Event"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": "Prometheus",
+          "definition": "label_values(customer_satisfaction_score, current_phase)",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Phase",
+          "multi": false,
+          "name": "phase",
+          "options": [],
+          "query": "label_values(customer_satisfaction_score, current_phase)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        }
+      ]
+    }
+  }
+}
