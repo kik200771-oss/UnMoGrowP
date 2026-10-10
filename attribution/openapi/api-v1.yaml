@@ -1,0 +1,966 @@
+openapi: 3.1.0
+info:
+  title: UnMoGrowP Attribution Platform API
+  description: |
+    **Unified Mobile Growth Platform API v1**
+
+    High-performance mobile attribution platform API providing:
+    - **Event ingestion** (10M+ events/sec capacity)
+    - **Attribution analytics** with ML-powered insights
+    - **Campaign tracking** and fraud detection
+    - **Real-time dashboards** and reporting
+
+    ## Authentication
+    All endpoints require API key authentication via `Authorization: Bearer <token>` header.
+
+    ## Rate Limits
+    - **Free tier**: 1,000 events/hour
+    - **Pro tier**: 100K events/hour
+    - **Enterprise**: Custom limits
+
+    ## Event Processing
+    Events are processed asynchronously with <100ms acknowledgment time.
+
+  version: "1.0.0"
+  contact:
+    name: UnMoGrowP API Support
+    email: api@unmogrowp.com
+    url: https://docs.unmogrowp.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  x-logo:
+    url: https://unmogrowp.com/logo.png
+    altText: UnMoGrowP Logo
+
+servers:
+  - url: https://api.unmogrowp.com/v1
+    description: Production API
+  - url: https://staging-api.unmogrowp.com/v1
+    description: Staging API
+  - url: http://localhost:3001/v1
+    description: Local Development
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: |
+        Returns the health status of the API and all dependent services.
+
+        **Response Codes:**
+        - `200`: All services healthy
+        - `503`: One or more services degraded
+
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                timestamp: "2025-10-24T10:00:00Z"
+                version: "1.0.0"
+                services:
+                  database: "healthy"
+                  kafka: "healthy"
+                  redis: "healthy"
+                  clickhouse: "healthy"
+                uptime: 3600
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "degraded"
+                timestamp: "2025-10-24T10:00:00Z"
+                version: "1.0.0"
+                services:
+                  database: "healthy"
+                  kafka: "unhealthy"
+                  redis: "healthy"
+                  clickhouse: "healthy"
+                uptime: 3600
+
+  /events/ingest:
+    post:
+      tags:
+        - Events
+      summary: Ingest Attribution Event
+      description: |
+        Ingest a single attribution event or batch of events.
+
+        **Event Types:**
+        - `install`: App installation
+        - `session_start`: User session began
+        - `purchase`: In-app purchase
+        - `custom`: Custom event
+
+        **Processing:**
+        - Events validated against JSON schema
+        - Queued for real-time processing
+        - Attribution computed within 100ms
+
+      operationId: ingestEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AttributionEvent'
+                - type: array
+                  items:
+                    $ref: '#/components/schemas/AttributionEvent'
+                  maxItems: 100
+            examples:
+              single_install:
+                summary: Single install event
+                value:
+                  eventId: "evt_123456789"
+                  timestamp: "2025-10-24T10:00:00Z"
+                  deviceId: "device_abc123"
+                  campaign: "summer_sale_2025"
+                  source: "ad_network"
+                  metadata:
+                    network: "facebook"
+                    creative_id: "creative_456"
+              batch_events:
+                summary: Batch of events
+                value:
+                  - eventId: "evt_123456789"
+                    timestamp: "2025-10-24T10:00:00Z"
+                    deviceId: "device_abc123"
+                    campaign: "summer_sale_2025"
+                    source: "ad_network"
+                  - eventId: "evt_123456790"
+                    timestamp: "2025-10-24T10:01:00Z"
+                    deviceId: "device_def456"
+                    campaign: "winter_promo_2025"
+                    source: "organic"
+      responses:
+        '202':
+          description: Event(s) accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventIngestResponse'
+              example:
+                status: "accepted"
+                processed_count: 1
+                event_ids: ["evt_123456789"]
+                processing_time_ms: 15
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "validation_failed"
+                message: "Invalid event schema"
+                details:
+                  - field: "timestamp"
+                    message: "Invalid ISO 8601 format"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /analytics/attribution:
+    get:
+      tags:
+        - Analytics
+      summary: Get Attribution Analytics
+      description: |
+        Retrieve attribution analytics for campaigns, sources, and time periods.
+
+        **Features:**
+        - Multi-touch attribution models
+        - Campaign performance metrics
+        - Fraud detection insights
+        - Real-time and historical data
+
+      operationId: getAttributionAnalytics
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2025-10-01"
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2025-10-24"
+        - name: campaign
+          in: query
+          schema:
+            type: string
+          example: "summer_sale_2025"
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [ad_network, organic, cross_promotion]
+          example: "ad_network"
+        - name: attribution_model
+          in: query
+          schema:
+            type: string
+            enum: [first_click, last_click, linear, time_decay, position_based]
+            default: "last_click"
+          example: "last_click"
+      responses:
+        '200':
+          description: Attribution analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributionAnalytics'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  # 🆕 ML Analytics Endpoints
+  /ml/predict/saturation:
+    post:
+      tags:
+        - 🤖 Machine Learning
+      summary: Multi-Period Saturation Prediction
+      description: |
+        **🎯 Industry-First Feature**: Advanced traffic saturation prediction using ensemble ML models.
+
+        Analyzes traffic cost growth across **4 time periods**:
+        - **7 days**: Short-term trends
+        - **14 days**: Medium-term patterns
+        - **30 days**: Long-term saturation curves
+        - **Adaptive**: AI-selected optimal period
+
+        **Features:**
+        - **Ensemble Predictions**: Weighted voting from all periods
+        - **Confidence Scoring**: Individual confidence per period
+        - **Risk Assessment**: CPA growth and saturation probability
+        - **Real-time Analysis**: Uses historical ClickHouse data
+
+      operationId: predictSaturation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaturationPredictionRequest'
+            example:
+              campaign_id: "campaign_001"
+              platform: "facebook"
+              current_spend: 1500
+              target_spend: 3000
+              historical_days: 30
+      responses:
+        '200':
+          description: Multi-period saturation predictions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaturationPredictionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: ML model prediction failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /analytics/saturation:
+    get:
+      tags:
+        - 🤖 Machine Learning
+      summary: Dashboard Saturation Analytics
+      description: |
+        **Dashboard-optimized** saturation analytics endpoint with query parameters.
+
+        Returns formatted data ready for frontend visualization.
+
+      operationId: getSaturationAnalytics
+      parameters:
+        - name: campaign_id
+          in: query
+          schema:
+            type: string
+            default: "campaign_001"
+          example: "campaign_001"
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [facebook, google, tiktok, twitter, snapchat]
+            default: "facebook"
+          example: "facebook"
+        - name: current_spend
+          in: query
+          schema:
+            type: number
+            minimum: 100
+            default: 1000
+          example: 1500
+        - name: target_spend
+          in: query
+          schema:
+            type: number
+            minimum: 100
+            default: 2000
+          example: 3000
+      responses:
+        '200':
+          description: Dashboard saturation analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaturationAnalyticsResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /ml/predict/conversion:
+    post:
+      tags:
+        - 🤖 Machine Learning
+      summary: User Conversion Prediction
+      description: Predict conversion probability for a user using XGBoost model
+      operationId: predictConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                touchpoints:
+                  type: array
+                  items:
+                    type: object
+                user_features:
+                  type: object
+      responses:
+        '200':
+          description: Conversion prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  conversion_probability:
+                    type: number
+                  confidence:
+                    type: number
+      security:
+        - BearerAuth: []
+
+  /ml/predict/revenue:
+    post:
+      tags:
+        - 🤖 Machine Learning
+      summary: Campaign Revenue Prediction
+      description: Predict campaign revenue using Random Forest model
+      operationId: predictRevenue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaign_id:
+                  type: string
+                historical_data:
+                  type: object
+                budget:
+                  type: number
+                duration_days:
+                  type: integer
+      responses:
+        '200':
+          description: Revenue prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  campaign_id:
+                    type: string
+                  predicted_revenue:
+                    type: number
+                  confidence_interval:
+                    type: object
+                  roi_estimate:
+                    type: number
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token authentication. Include your API token in the Authorization header:
+        ```
+        Authorization: Bearer <your-api-token>
+        ```
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - version
+        - services
+        - uptime
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall service health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp (ISO 8601)
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+        services:
+          type: object
+          description: Health status of dependent services
+          properties:
+            database:
+              type: string
+              enum: [healthy, unhealthy]
+            kafka:
+              type: string
+              enum: [healthy, unhealthy]
+            redis:
+              type: string
+              enum: [healthy, unhealthy]
+            clickhouse:
+              type: string
+              enum: [healthy, unhealthy]
+        uptime:
+          type: integer
+          description: Service uptime in seconds
+          minimum: 0
+
+    AttributionEvent:
+      type: object
+      required:
+        - eventId
+        - timestamp
+        - deviceId
+        - campaign
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique event identifier
+          example: "evt_123456789"
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp (ISO 8601)
+          example: "2025-10-24T10:00:00Z"
+        deviceId:
+          type: string
+          description: Unique device identifier
+          example: "device_abc123"
+          maxLength: 255
+        campaign:
+          type: string
+          description: Campaign identifier
+          example: "summer_sale_2025"
+          maxLength: 255
+        source:
+          type: string
+          enum: [ad_network, organic, cross_promotion]
+          description: Traffic source type
+          example: "ad_network"
+        metadata:
+          type: object
+          description: Additional event metadata
+          additionalProperties: true
+          example:
+            network: "facebook"
+            creative_id: "creative_456"
+            user_agent: "Mozilla/5.0..."
+
+    EventIngestResponse:
+      type: object
+      required:
+        - status
+        - processed_count
+        - event_ids
+        - processing_time_ms
+      properties:
+        status:
+          type: string
+          enum: [accepted, partial, rejected]
+          description: Processing status
+        processed_count:
+          type: integer
+          description: Number of events successfully processed
+          minimum: 0
+        event_ids:
+          type: array
+          items:
+            type: string
+          description: List of processed event IDs
+        processing_time_ms:
+          type: integer
+          description: Processing time in milliseconds
+          minimum: 0
+
+    AttributionAnalytics:
+      type: object
+      required:
+        - period
+        - attribution_model
+        - metrics
+        - campaigns
+      properties:
+        period:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+        attribution_model:
+          type: string
+          enum: [first_click, last_click, linear, time_decay, position_based]
+        metrics:
+          type: object
+          properties:
+            total_installs:
+              type: integer
+              minimum: 0
+            total_revenue:
+              type: number
+              format: float
+              minimum: 0
+            cost_per_install:
+              type: number
+              format: float
+              minimum: 0
+            return_on_ad_spend:
+              type: number
+              format: float
+              minimum: 0
+        campaigns:
+          type: array
+          items:
+            type: object
+            properties:
+              campaign_id:
+                type: string
+              name:
+                type: string
+              installs:
+                type: integer
+                minimum: 0
+              revenue:
+                type: number
+                format: float
+                minimum: 0
+              cost:
+                type: number
+                format: float
+                minimum: 0
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "validation_failed"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid event schema"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+          description: Detailed validation errors
+
+    # 🆕 Multi-Period Saturation Model Schemas
+    SaturationPredictionRequest:
+      type: object
+      required:
+        - campaign_id
+        - platform
+        - current_spend
+        - target_spend
+      properties:
+        campaign_id:
+          type: string
+          description: Campaign identifier
+          example: "campaign_001"
+        platform:
+          type: string
+          enum: [facebook, google, tiktok, twitter, snapchat]
+          description: Advertising platform
+          example: "facebook"
+        current_spend:
+          type: number
+          minimum: 0
+          description: Current daily spend in USD
+          example: 1500
+        target_spend:
+          type: number
+          minimum: 0
+          description: Target daily spend in USD
+          example: 3000
+        historical_days:
+          type: integer
+          minimum: 7
+          maximum: 90
+          default: 30
+          description: Days of historical data to analyze
+          example: 30
+
+    PeriodPrediction:
+      type: object
+      required:
+        - period
+        - period_days
+        - predicted_cpa
+        - confidence
+        - saturation_point
+        - cost_efficiency
+        - risk_level
+      properties:
+        period:
+          type: string
+          enum: ["7d", "14d", "30d", "adaptive"]
+          description: Time period for prediction
+          example: "7d"
+        period_days:
+          type: integer
+          description: Number of days in the period
+          example: 7
+        predicted_cpa:
+          type: number
+          format: float
+          minimum: 0
+          description: Predicted cost per acquisition
+          example: 1.15
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Prediction confidence score
+          example: 0.82
+        saturation_point:
+          type: number
+          format: float
+          minimum: 0
+          description: Estimated saturation point spend
+          example: 1800.0
+        cost_efficiency:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Cost efficiency rating
+          example: 0.87
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+          description: Risk assessment level
+          example: "low"
+
+    EnsemblePrediction:
+      type: object
+      required:
+        - predicted_cpa
+        - confidence_interval
+        - risk_assessment
+        - optimal_spend
+        - saturation_probability
+      properties:
+        predicted_cpa:
+          type: number
+          format: float
+          minimum: 0
+          description: Ensemble predicted CPA
+          example: 1.23
+        confidence_interval:
+          type: object
+          properties:
+            lower:
+              type: number
+              format: float
+              description: Lower confidence bound
+              example: 1.18
+            upper:
+              type: number
+              format: float
+              description: Upper confidence bound
+              example: 1.28
+        risk_assessment:
+          type: string
+          enum: [low, medium, high]
+          description: Overall risk level
+          example: "low"
+        optimal_spend:
+          type: number
+          format: float
+          minimum: 0
+          description: Recommended optimal spend
+          example: 2100.0
+        saturation_probability:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Probability of hitting saturation
+          example: 0.15
+
+    SaturationPredictionResponse:
+      type: object
+      required:
+        - campaign_id
+        - platform
+        - request_timestamp
+        - period_predictions
+        - ensemble_prediction
+        - recommendations
+        - data_quality_score
+        - model_version
+      properties:
+        campaign_id:
+          type: string
+          description: Campaign identifier
+          example: "campaign_001"
+        platform:
+          type: string
+          description: Advertising platform
+          example: "facebook"
+        request_timestamp:
+          type: string
+          format: date-time
+          description: Prediction request timestamp
+          example: "2025-10-24T10:00:00Z"
+        period_predictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PeriodPrediction'
+          description: Predictions for each time period
+        ensemble_prediction:
+          $ref: '#/components/schemas/EnsemblePrediction'
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: Actionable recommendations
+          example:
+            - "Safe to increase spend to $2100 based on ensemble prediction"
+            - "Monitor 30-day trend for early saturation signals"
+        data_quality_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Quality score of underlying data
+          example: 0.85
+        model_version:
+          type: string
+          description: ML model version used
+          example: "1.0.0"
+
+    SaturationAnalyticsResponse:
+      type: object
+      required:
+        - campaign_id
+        - platform
+        - spend_range
+        - periods
+        - ensemble
+        - recommendations
+        - data_quality
+        - timestamp
+      properties:
+        campaign_id:
+          type: string
+          description: Campaign identifier
+          example: "campaign_001"
+        platform:
+          type: string
+          description: Advertising platform
+          example: "facebook"
+        spend_range:
+          type: object
+          properties:
+            current:
+              type: number
+              description: Current daily spend
+              example: 1500
+            target:
+              type: number
+              description: Target daily spend
+              example: 3000
+            increase_percentage:
+              type: number
+              description: Percentage increase
+              example: 100.0
+        periods:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+                example: "7d"
+              days:
+                type: integer
+                example: 7
+              predicted_cpa:
+                type: number
+                example: 1.15
+              confidence:
+                type: number
+                example: 0.82
+              saturation_point:
+                type: number
+                example: 1800.0
+              cost_efficiency:
+                type: number
+                example: 0.87
+              risk_level:
+                type: string
+                example: "low"
+        ensemble:
+          type: object
+          properties:
+            predicted_cpa:
+              type: number
+              example: 1.23
+            confidence_interval:
+              type: object
+              properties:
+                lower:
+                  type: number
+                  example: 1.18
+                upper:
+                  type: number
+                  example: 1.28
+            risk_level:
+              type: string
+              example: "low"
+            optimal_spend:
+              type: number
+              example: 2100.0
+            saturation_probability:
+              type: number
+              example: 0.15
+        recommendations:
+          type: array
+          items:
+            type: string
+          example:
+            - "Safe to increase spend to $2100 based on ensemble prediction"
+            - "Monitor 30-day trend for early saturation signals"
+        data_quality:
+          type: number
+          example: 0.85
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-10-24T10:00:00Z"
+        note:
+          type: string
+          description: Optional fallback notice
+          example: "Using fallback data - model temporarily unavailable"
+
+tags:
+  - name: Health
+    description: Service health and status endpoints
+  - name: Events
+    description: Event ingestion and processing
+  - name: Analytics
+    description: Attribution analytics and reporting
+  - name: 🤖 Machine Learning
+    description: Advanced ML predictions and traffic saturation modeling
+
+x-tagGroups:
+  - name: Core API
+    tags:
+      - Health
+      - Events
+  - name: Analytics
+    tags:
+      - Analytics
+  - name: 🤖 AI & Machine Learning
+    tags:
+      - 🤖 Machine Learning

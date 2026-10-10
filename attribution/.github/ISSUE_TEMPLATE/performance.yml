@@ -1,0 +1,67 @@
+name: ⚡ Performance Issue
+description: Report performance problems or suggest optimizations
+title: "[PERF] "
+labels: ["performance", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a performance issue!
+
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Which component has performance issues?
+      placeholder: "e.g., ingestion service, ClickHouse queries, web-ui"
+    validations:
+      required: true
+
+  - type: textarea
+    id: performance-issue
+    attributes:
+      label: Describe the performance issue
+      description: What specific performance problem are you experiencing?
+      placeholder: "API response times are >5 seconds for dashboard queries"
+    validations:
+      required: true
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Performance metrics
+      description: |
+        Include any metrics, benchmarks, or profiling data you have
+        - Response times
+        - Throughput (requests/events per second)
+        - Memory/CPU usage
+        - Database query times
+      placeholder: |
+        - Average response time: 8.2 seconds
+        - Peak memory usage: 2.1 GB
+        - ClickHouse query time: 12 seconds
+
+  - type: textarea
+    id: load-conditions
+    attributes:
+      label: Load conditions
+      description: Under what conditions does this performance issue occur?
+      placeholder: |
+        - Number of events: 10K/minute
+        - Concurrent users: 50
+        - Data size: 1TB attribution data
+
+  - type: textarea
+    id: expected-performance
+    attributes:
+      label: Expected performance
+      description: What performance do you expect?
+      placeholder: "API responses should be <1 second, support 100K events/sec"
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other information that might help diagnose the performance issue

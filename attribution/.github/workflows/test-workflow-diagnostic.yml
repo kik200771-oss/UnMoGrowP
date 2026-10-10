@@ -1,0 +1,32 @@
+name: 🧪 Test Workflow Diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_input:
+        description: 'Test diagnostic input'
+        required: false
+        default: 'diagnostic'
+
+jobs:
+  diagnostic-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      actions: read
+
+    steps:
+      - name: 🔍 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 30
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📊 Simple Diagnostic
+        run: |
+          echo "🧪 Diagnostic test workflow running"
+          echo "Input: ${{ github.event.inputs.test_input }}"
+          echo "Date: $(date)"
+          echo "Branch: ${{ github.ref_name }}"

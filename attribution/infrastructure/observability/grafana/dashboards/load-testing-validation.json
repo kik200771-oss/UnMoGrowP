@@ -1,0 +1,456 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "unmogrowp-load-testing",
+    "title": "UnMoGrowP Load Testing & Validation - 1M Events/sec Target",
+    "tags": ["unmogrowp", "load-testing", "validation", "performance"],
+    "timezone": "browser",
+    "refresh": "5s",
+    "time": {
+      "from": "now-30m",
+      "to": "now"
+    },
+    "editable": true,
+    "graphTooltip": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Load Test Status - 1M Events/sec Goal",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(attribution_events_processed_total[1m]))",
+            "legendFormat": "Current Throughput",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "decimals": 0,
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 50},
+                {"color": "green", "value": 100}
+              ]
+            },
+            "max": 1000000,
+            "min": 0,
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "value_and_name",
+          "colorMode": "background",
+          "graphMode": "area",
+          "justifyMode": "center"
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "P95 Latency Under Load (Target: <100ms)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P95 Latency",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 2,
+            "min": 0,
+            "max": 200,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 100}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Success Rate Under Load (Target: >99.9%)",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "(1 - (sum(rate(attribution_events_processed_total{status=\"error\"}[5m])) / sum(rate(attribution_events_processed_total[5m])))) * 100",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 3,
+            "min": 99,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 99.5},
+                {"color": "green", "value": 99.9}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          }
+        },
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Event Processing Rate - Load Test Progress",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(attribution_events_processed_total[1m]))",
+            "legendFormat": "Actual Throughput",
+            "refId": "A"
+          },
+          {
+            "expr": "1000000",
+            "legendFormat": "Target (1M/sec)",
+            "refId": "B"
+          },
+          {
+            "expr": "500000",
+            "legendFormat": "50% Target",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Events per second",
+            "format": "ops",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Latency Distribution Under Load",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(attribution_event_processing_duration_seconds_bucket[1m])) by (le)) * 1000",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.75, sum(rate(attribution_event_processing_duration_seconds_bucket[1m])) by (le)) * 1000",
+            "legendFormat": "P75",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.90, sum(rate(attribution_event_processing_duration_seconds_bucket[1m])) by (le)) * 1000",
+            "legendFormat": "P90",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[1m])) by (le)) * 1000",
+            "legendFormat": "P95",
+            "refId": "D"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(attribution_event_processing_duration_seconds_bucket[1m])) by (le)) * 1000",
+            "legendFormat": "P99",
+            "refId": "E"
+          },
+          {
+            "expr": "100",
+            "legendFormat": "Target P95 (100ms)",
+            "refId": "F"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Latency (ms)",
+            "format": "ms",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 18}
+      },
+      {
+        "id": 6,
+        "title": "Resource Utilization Under Load",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Usage %",
+            "format": "percent",
+            "min": 0,
+            "max": 100
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 18}
+      },
+      {
+        "id": 7,
+        "title": "Error Rate During Load Test",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "sum(rate(attribution_events_processed_total{status=\"error\"}[1m])) / sum(rate(attribution_events_processed_total[1m])) * 100",
+            "legendFormat": "Error Rate %",
+            "refId": "A"
+          },
+          {
+            "expr": "0.1",
+            "legendFormat": "Max Acceptable (0.1%)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Error Rate %",
+            "format": "percent",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [0.1],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "1m",
+          "handler": 1,
+          "name": "Load Test Error Rate Too High",
+          "noDataState": "no_data",
+          "notifications": []
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28}
+      },
+      {
+        "id": 8,
+        "title": "Queue Depth & Backpressure",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "attribution_active_connections",
+            "legendFormat": "Active Connections",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "label": "Connections",
+            "format": "short",
+            "min": 0
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28}
+      },
+      {
+        "id": 9,
+        "title": "Load Test Validation Summary",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "sum(rate(attribution_events_processed_total[5m]))",
+            "legendFormat": "Throughput (events/sec)",
+            "refId": "A",
+            "format": "table",
+            "instant": true
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000",
+            "legendFormat": "P95 Latency (ms)",
+            "refId": "B",
+            "format": "table",
+            "instant": true
+          },
+          {
+            "expr": "(1 - (sum(rate(attribution_events_processed_total{status=\"error\"}[5m])) / sum(rate(attribution_events_processed_total[5m])))) * 100",
+            "legendFormat": "Success Rate (%)",
+            "refId": "C",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true
+              },
+              "indexByName": {},
+              "renameByName": {
+                "Value #A": "Throughput (events/sec)",
+                "Value #B": "P95 Latency (ms)",
+                "Value #C": "Success Rate (%)"
+              }
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "center",
+              "displayMode": "color-background"
+            },
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 500000},
+                {"color": "green", "value": 1000000}
+              ]
+            },
+            "color": {
+              "mode": "thresholds"
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "P95 Latency (ms)"},
+              "properties": [
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"color": "green", "value": null},
+                      {"color": "yellow", "value": 80},
+                      {"color": "red", "value": 100}
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Success Rate (%)"},
+              "properties": [
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"color": "red", "value": null},
+                      {"color": "yellow", "value": 99.5},
+                      {"color": "green", "value": 99.9}
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36}
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "datasource": "Prometheus",
+          "enable": true,
+          "expr": "ALERTS{alertname=~\".*LoadTest.*|.*Performance.*\",alertstate=\"firing\"}",
+          "iconColor": "rgba(255, 152, 48, 1)",
+          "name": "Load Test Alerts",
+          "step": "60s",
+          "tagKeys": "alertname",
+          "textFormat": "{{alertname}}",
+          "titleFormat": "Load Test Alert"
+        }
+      ]
+    }
+  }
+}

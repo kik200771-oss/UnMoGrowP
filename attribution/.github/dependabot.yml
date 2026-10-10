@@ -1,0 +1,121 @@
+version: 2
+updates:
+  # Frontend dependencies (npm)
+  - package-ecosystem: "npm"
+    directory: "/apps/web-ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # API dependencies (npm/bun)
+  - package-ecosystem: "npm"
+    directory: "/apps/api-gateway"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "api"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(api)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # Root dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "root"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(root)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # Backend dependencies (Go)
+  - package-ecosystem: "gomod"
+    directory: "/services/ingestion"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+      - "go"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+    versioning-strategy: increase
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/infra/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    reviewers:
+      - "kik200771-oss"
+    assignees:
+      - "kik200771-oss"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"

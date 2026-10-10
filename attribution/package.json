@@ -1,0 +1,46 @@
+{
+  "name": "unmogrowp-attribution",
+  "version": "0.3.0",
+  "private": true,
+  "description": "UnMoGrowP Attribution Platform - Mobile attribution with AI insights",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm run lint:frontend",
+    "lint:frontend": "cd frontend && npm run check",
+    "format": "prettier --write \"**/*.{js,ts,svelte,json,md}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{js,ts,svelte,json,md}\" --ignore-path .gitignore",
+    "test": "npm run test:api",
+    "test:api": "bash scripts/test-api.sh",
+    "test:ui-ux": "node scripts/test-ui-ux-agent.js",
+    "test:pm": "npx tsx scripts/test-product-manager-demo.ts"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.67.0",
+    "@types/node": "^20",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
+    "@types/react-google-recaptcha": "^2.1.9",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "next-auth": "^4.24.11",
+    "react-google-recaptcha": "^3.1.0",
+    "tailwind-merge": "^3.3.1"
+  },
+  "lint-staged": {
+    "*.{js,ts,svelte}": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ],
+    "*.go": [
+      "gofmt -w"
+    ]
+  }
+}

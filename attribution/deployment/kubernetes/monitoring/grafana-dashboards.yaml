@@ -1,0 +1,415 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: attribution-platform
+  labels:
+    grafana_dashboard: "1"
+data:
+  ml-services-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "ML Services Overview",
+        "tags": ["ml", "attribution", "overview"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "ML Services Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=~\"ml-analytics|attribution-ml|fraud-detection|ltv-prediction\"}",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                },
+                "mappings": [
+                  {"options": {"0": {"text": "DOWN"}}, "type": "value"},
+                  {"options": {"1": {"text": "UP"}}, "type": "value"}
+                ]
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Total Predictions per Minute",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(ml_predictions_total[1m]) * 60",
+                "legendFormat": "ML Analytics"
+              },
+              {
+                "expr": "rate(attribution_calculations_total[1m]) * 60",
+                "legendFormat": "Attribution"
+              },
+              {
+                "expr": "rate(fraud_detections_total[1m]) * 60",
+                "legendFormat": "Fraud Detection"
+              },
+              {
+                "expr": "rate(ltv_predictions_total[1m]) * 60",
+                "legendFormat": "LTV Prediction"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Average Response Time",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, ml_prediction_latency_seconds_bucket)",
+                "legendFormat": "ML Analytics (95th)"
+              },
+              {
+                "expr": "histogram_quantile(0.95, attribution_calculation_latency_seconds_bucket)",
+                "legendFormat": "Attribution (95th)"
+              },
+              {
+                "expr": "histogram_quantile(0.95, fraud_detection_latency_seconds_bucket)",
+                "legendFormat": "Fraud Detection (95th)"
+              },
+              {
+                "expr": "histogram_quantile(0.95, ltv_prediction_latency_seconds_bucket)",
+                "legendFormat": "LTV Prediction (95th)"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "s"
+              }
+            },
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "API Request Rate",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(api_requests_total[5m]) * 60",
+                "legendFormat": "{{job}} - {{method}} {{endpoint}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqps"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 5,
+            "title": "Error Rate",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "(rate(api_requests_total{code=~\"5..\"}[5m]) / rate(api_requests_total[5m])) * 100",
+                "legendFormat": "{{job}} Error Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+  ml-performance-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "ML Performance Dashboard",
+        "tags": ["ml", "performance", "latency"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Prediction Latency Distribution",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "rate(ml_prediction_latency_seconds_bucket[5m])",
+                "legendFormat": "{{le}}"
+              }
+            ],
+            "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Throughput by Service",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(ml_predictions_total{model=\"conversion\"}[1m]) * 60",
+                "legendFormat": "Conversion Predictions"
+              },
+              {
+                "expr": "rate(ml_predictions_total{model=\"revenue\"}[1m]) * 60",
+                "legendFormat": "Revenue Predictions"
+              },
+              {
+                "expr": "rate(ml_predictions_total{model=\"churn\"}[1m]) * 60",
+                "legendFormat": "Churn Predictions"
+              },
+              {
+                "expr": "rate(attribution_calculations_total[1m]) * 60",
+                "legendFormat": "Attribution Calculations"
+              },
+              {
+                "expr": "rate(fraud_detections_total[1m]) * 60",
+                "legendFormat": "Fraud Detections"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "reqpm"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 10}
+          },
+          {
+            "id": 3,
+            "title": "Memory Usage",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "container_memory_working_set_bytes{pod=~\".*ml.*|.*attribution.*|.*fraud.*|.*ltv.*\"} / 1024 / 1024",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "MiB"
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10}
+          },
+          {
+            "id": 4,
+            "title": "CPU Usage",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{pod=~\".*ml.*|.*attribution.*|.*fraud.*|.*ltv.*\"}[5m]) * 100",
+                "legendFormat": "{{pod}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent"
+              }
+            },
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 18}
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+  business-metrics-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Business Metrics Dashboard",
+        "tags": ["business", "ml", "insights"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Fraud Detection Results",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "increase(fraud_detections_total{result=\"low\"}[1h])",
+                "legendFormat": "Low Risk"
+              },
+              {
+                "expr": "increase(fraud_detections_total{result=\"medium\"}[1h])",
+                "legendFormat": "Medium Risk"
+              },
+              {
+                "expr": "increase(fraud_detections_total{result=\"high\"}[1h])",
+                "legendFormat": "High Risk"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Attribution Model Usage",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "increase(attribution_calculations_total{model=\"first_touch\"}[1h])",
+                "legendFormat": "First Touch"
+              },
+              {
+                "expr": "increase(attribution_calculations_total{model=\"last_touch\"}[1h])",
+                "legendFormat": "Last Touch"
+              },
+              {
+                "expr": "increase(attribution_calculations_total{model=\"linear\"}[1h])",
+                "legendFormat": "Linear"
+              },
+              {
+                "expr": "increase(attribution_calculations_total{model=\"time_decay\"}[1h])",
+                "legendFormat": "Time Decay"
+              },
+              {
+                "expr": "increase(attribution_calculations_total{model=\"position_based\"}[1h])",
+                "legendFormat": "Position Based"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "LTV Segments Distribution",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "increase(ltv_predictions_total{segment=\"low\"}[1h])",
+                "legendFormat": "Low Value"
+              },
+              {
+                "expr": "increase(ltv_predictions_total{segment=\"medium\"}[1h])",
+                "legendFormat": "Medium Value"
+              },
+              {
+                "expr": "increase(ltv_predictions_total{segment=\"high\"}[1h])",
+                "legendFormat": "High Value"
+              },
+              {
+                "expr": "increase(ltv_predictions_total{segment=\"premium\"}[1h])",
+                "legendFormat": "Premium"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Hourly Prediction Volume",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "increase(ml_predictions_total[1h])",
+                "legendFormat": "ML Predictions"
+              },
+              {
+                "expr": "increase(attribution_calculations_total[1h])",
+                "legendFormat": "Attribution"
+              },
+              {
+                "expr": "increase(fraud_detections_total[1h])",
+                "legendFormat": "Fraud Detection"
+              },
+              {
+                "expr": "increase(ltv_predictions_total[1h])",
+                "legendFormat": "LTV Predictions"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "High-Risk Fraud Trends",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "rate(fraud_detections_total{result=\"high\"}[10m]) * 60",
+                "legendFormat": "High Risk Detections/min"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 5},
+                    {"color": "red", "value": 10}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Model Accuracy Trends",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "ml_model_accuracy{model=\"conversion\"}",
+                "legendFormat": "Conversion Model"
+              },
+              {
+                "expr": "ml_model_accuracy{model=\"revenue\"}",
+                "legendFormat": "Revenue Model"
+              },
+              {
+                "expr": "ml_model_accuracy{model=\"churn\"}",
+                "legendFormat": "Churn Model"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100
+              }
+            },
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ],
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "refresh": "1m"
+      }
+    }
