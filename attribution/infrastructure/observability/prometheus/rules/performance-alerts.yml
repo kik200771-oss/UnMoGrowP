@@ -1,0 +1,305 @@
+# UnMoGrowP Performance Alerting Rules
+# Week 1 Sprint Goals: 1M events/sec, <100ms P95 latency, >99.9% uptime
+
+groups:
+  - name: performance_critical
+    interval: 30s
+    rules:
+      # ========================================================================
+      # CRITICAL: Event Processing Throughput
+      # ========================================================================
+      - alert: EventThroughputBelowTarget
+        expr: sum(rate(attribution_events_processed_total[5m])) < 1000000
+        for: 5m
+        labels:
+          severity: critical
+          category: performance
+          sprint_goal: week1
+        annotations:
+          summary: "Event processing below 1M events/sec target"
+          description: "Current throughput: {{ $value | humanize }} events/sec. Target: 1M events/sec. Sprint Week 1 goal at risk."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-throughput"
+
+      - alert: EventThroughputCriticallyLow
+        expr: sum(rate(attribution_events_processed_total[5m])) < 500000
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+          sprint_goal: week1
+        annotations:
+          summary: "Event processing critically low (<50% of target)"
+          description: "Current throughput: {{ $value | humanize }} events/sec. Only {{ $value | humanize1024 }}% of 1M target."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/critical-throughput"
+
+      # ========================================================================
+      # CRITICAL: API Latency
+      # ========================================================================
+      - alert: P95LatencyAboveTarget
+        expr: histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000 > 100
+        for: 3m
+        labels:
+          severity: critical
+          category: performance
+          sprint_goal: week1
+        annotations:
+          summary: "P95 latency above 100ms target"
+          description: "Current P95 latency: {{ $value | printf \"%.2f\" }}ms. Target: <100ms. Customer SLA at risk."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/high-latency"
+
+      - alert: P99LatencyCritical
+        expr: histogram_quantile(0.99, sum(rate(attribution_event_processing_duration_seconds_bucket[5m])) by (le)) * 1000 > 200
+        for: 2m
+        labels:
+          severity: critical
+          category: performance
+        annotations:
+          summary: "P99 latency critically high (>200ms)"
+          description: "Current P99 latency: {{ $value | printf \"%.2f\" }}ms. Severe performance degradation."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/critical-latency"
+
+      - alert: LatencyDegrading
+        expr: rate(histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[5m])) by (le))[10m:1m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Latency is degrading rapidly"
+          description: "P95 latency increasing by {{ $value | printf \"%.2f\" }}% per minute. Investigation needed."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/latency-degradation"
+
+      # ========================================================================
+      # CRITICAL: System Uptime & Availability
+      # ========================================================================
+      - alert: ServiceDown
+        expr: up{job=~"unmogrowp.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: availability
+          sprint_goal: week1
+        annotations:
+          summary: "UnMoGrowP service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/service-down"
+
+      - alert: UptimeBelow99_9
+        expr: avg_over_time(up{job=~"unmogrowp.*"}[1h]) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          category: availability
+          sprint_goal: week1
+        annotations:
+          summary: "System uptime below 99.9% target"
+          description: "Current uptime: {{ $value | humanizePercentage }}. Target: >99.9%. Customer SLA breach."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-uptime"
+
+      # ========================================================================
+      # CRITICAL: Error Rates
+      # ========================================================================
+      - alert: HighErrorRate
+        expr: (sum(rate(attribution_events_processed_total{status="error"}[5m])) / sum(rate(attribution_events_processed_total[5m]))) * 100 > 0.1
+        for: 3m
+        labels:
+          severity: critical
+          category: reliability
+          sprint_goal: week1
+        annotations:
+          summary: "Event processing error rate above 0.1%"
+          description: "Current error rate: {{ $value | printf \"%.3f\" }}%. Target: <0.1%. Success rate below 99.9%."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/high-errors"
+
+      - alert: ErrorRateSpike
+        expr: (sum(rate(attribution_events_processed_total{status="error"}[1m])) / sum(rate(attribution_events_processed_total[1m]))) * 100 > 1
+        for: 1m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Sudden spike in error rate (>1%)"
+          description: "Error rate spiked to {{ $value | printf \"%.2f\" }}%. Immediate investigation required."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/error-spike"
+
+      # ========================================================================
+      # WARNING: Resource Exhaustion
+      # ========================================================================
+      - alert: HighMemoryUsage
+        expr: (attribution_memory_usage_bytes / 1024 / 1024 / 1024) > 7
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High memory usage (>7GB)"
+          description: "Current memory usage: {{ $value | printf \"%.2f\" }}GB. May impact performance."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/high-memory"
+
+      - alert: ConnectionPoolExhaustion
+        expr: attribution_active_connections > 5000
+        for: 3m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High connection count (>5000)"
+          description: "Active connections: {{ $value }}. Potential connection pool exhaustion."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/connection-exhaustion"
+
+  - name: customer_success_alerts
+    interval: 1m
+    rules:
+      # ========================================================================
+      # CRITICAL: Customer Success Metrics
+      # ========================================================================
+      - alert: CustomerSatisfactionBelowTarget
+        expr: customer_satisfaction_score < 90
+        for: 10m
+        labels:
+          severity: critical
+          category: customer_success
+          sprint_goal: week1
+        annotations:
+          summary: "Customer {{ $labels.customer_id }} satisfaction below 90%"
+          description: "Customer {{ $labels.company_name }} ({{ $labels.customer_id }}) satisfaction: {{ $value | printf \"%.1f\" }}%. Target: >90%."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-satisfaction"
+
+      - alert: CustomerAttributionAccuracyLow
+        expr: attribution_accuracy_percent{customer_id!=""} < 99
+        for: 15m
+        labels:
+          severity: critical
+          category: customer_success
+          sprint_goal: week1
+        annotations:
+          summary: "Customer {{ $labels.customer_id }} attribution accuracy below 99%"
+          description: "Attribution accuracy: {{ $value | printf \"%.2f\" }}%. Target: >99%. Technical success criteria not met."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-accuracy"
+
+      - alert: CustomerLatencyAboveSLA
+        expr: customer_api_latency_ms{percentile="p95"} > 100
+        for: 10m
+        labels:
+          severity: warning
+          category: customer_success
+          sprint_goal: week1
+        annotations:
+          summary: "Customer {{ $labels.customer_id }} experiencing high latency"
+          description: "P95 latency: {{ $value | printf \"%.2f\" }}ms. SLA: <100ms. Customer experience degraded."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/customer-latency"
+
+      - alert: PilotCustomerCountLow
+        expr: total_pilot_customers < 5
+        for: 1h
+        labels:
+          severity: warning
+          category: business_goals
+          sprint_goal: week1
+        annotations:
+          summary: "Pilot customer count below Week 1 target"
+          description: "Current pilot customers: {{ $value }}. Week 1 target: 5 customers. Onboarding velocity low."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-customer-count"
+
+      - alert: SuccessfulCustomerRateLow
+        expr: (successful_pilot_customers / total_pilot_customers) * 100 < 60
+        for: 30m
+        labels:
+          severity: warning
+          category: business_goals
+          sprint_goal: week1
+        annotations:
+          summary: "Successful customer rate below 60%"
+          description: "Success rate: {{ $value | printf \"%.1f\" }}%. Target: >80%. Product-market fit at risk."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-success-rate"
+
+  - name: load_testing_validation
+    interval: 30s
+    rules:
+      # ========================================================================
+      # Load Testing Campaign Validation
+      # ========================================================================
+      - alert: LoadTestThroughputFailure
+        expr: sum(rate(attribution_events_processed_total[2m])) < 1000000 and sum(rate(attribution_events_processed_total[2m])) > 100000
+        for: 5m
+        labels:
+          severity: warning
+          category: load_testing
+          sprint_goal: week1
+        annotations:
+          summary: "Load test throughput below 1M events/sec target"
+          description: "Load test throughput: {{ $value | humanize }} events/sec. Target: 1M events/sec. Performance optimization needed."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/load-test-failure"
+
+      - alert: LoadTestLatencyFailure
+        expr: histogram_quantile(0.95, sum(rate(attribution_event_processing_duration_seconds_bucket[2m])) by (le)) * 1000 > 100 and sum(rate(attribution_events_processed_total[2m])) > 500000
+        for: 3m
+        labels:
+          severity: warning
+          category: load_testing
+          sprint_goal: week1
+        annotations:
+          summary: "Load test P95 latency above 100ms under high load"
+          description: "P95 latency: {{ $value | printf \"%.2f\" }}ms at {{ query \"sum(rate(attribution_events_processed_total[2m]))\" | first | value | humanize }} events/sec. Latency target not met."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/load-test-latency"
+
+      - alert: LoadTestErrorRateHigh
+        expr: (sum(rate(attribution_events_processed_total{status="error"}[2m])) / sum(rate(attribution_events_processed_total[2m]))) * 100 > 0.1 and sum(rate(attribution_events_processed_total[2m])) > 500000
+        for: 2m
+        labels:
+          severity: critical
+          category: load_testing
+        annotations:
+          summary: "Load test error rate exceeds 0.1% threshold"
+          description: "Error rate: {{ $value | printf \"%.3f\" }}% under load. System reliability compromised."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/load-test-errors"
+
+  - name: infrastructure_health
+    interval: 1m
+    rules:
+      # ========================================================================
+      # Infrastructure Monitoring
+      # ========================================================================
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage: {{ $value | printf \"%.1f\" }}%. May impact performance."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/high-cpu"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Available disk space: {{ $value | printf \"%.1f\" }}%. Risk of service disruption."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/low-disk"
+
+      - alert: ClickHouseDown
+        expr: up{job="clickhouse"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "ClickHouse database is down"
+          description: "ClickHouse on {{ $labels.instance }} is unreachable. Data ingestion impacted."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/clickhouse-down"
+
+      - alert: KafkaDown
+        expr: up{job="kafka"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "Kafka is down"
+          description: "Kafka on {{ $labels.instance }} is unreachable. Event streaming impacted."
+          runbook_url: "https://docs.unmogrowp.com/runbooks/kafka-down"

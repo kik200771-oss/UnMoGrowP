@@ -1,0 +1,142 @@
+global:
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@attribution.platform'
+  smtp_auth_username: 'alerts@attribution.platform'
+  smtp_auth_password: 'your-smtp-password'
+
+route:
+  group_by: ['alertname', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'web.hook'
+  routes:
+    # Critical ML Service alerts
+    - match:
+        severity: critical
+        service: ~"ml-analytics|attribution-ml|fraud-detection|ltv-prediction"
+      receiver: 'ml-critical'
+      group_wait: 5s
+      repeat_interval: 30m
+
+    # Fraud detection alerts (immediate)
+    - match:
+        service: fraud-detection
+        alertname: HighFraudDetectionRate
+      receiver: 'fraud-immediate'
+      group_wait: 0s
+      repeat_interval: 15m
+
+    # High latency alerts
+    - match_re:
+        alertname: High.*Latency
+      receiver: 'performance-team'
+      repeat_interval: 2h
+
+    # Infrastructure alerts
+    - match:
+        severity: warning
+        category: infrastructure
+      receiver: 'infrastructure-team'
+      repeat_interval: 4h
+
+receivers:
+  - name: 'web.hook'
+    webhook_configs:
+      - url: 'http://localhost:5001/webhook'
+        title: 'Attribution Platform Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+  - name: 'ml-critical'
+    email_configs:
+      - to: 'ml-team@attribution.platform'
+        subject: '[CRITICAL] ML Service Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Alert: {{ .GroupLabels.alertname }}
+          Service: {{ .GroupLabels.service }}
+          Severity: {{ .CommonLabels.severity }}
+
+          {{ range .Alerts }}
+          Summary: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+
+          Labels:
+          {{ range .Labels.SortedPairs }}  {{ .Name }}: {{ .Value }}
+          {{ end }}
+          {{ end }}
+
+          Dashboard: http://localhost:3000/d/ml-overview
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        channel: '#ml-alerts'
+        title: 'Critical ML Service Alert'
+        text: |
+          🚨 *{{ .GroupLabels.alertname }}*
+          Service: {{ .GroupLabels.service }}
+          {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+
+  - name: 'fraud-immediate'
+    email_configs:
+      - to: 'security@attribution.platform,fraud-team@attribution.platform'
+        subject: '[FRAUD ALERT] High Fraud Detection Rate'
+        body: |
+          🚨 FRAUD ALERT 🚨
+
+          High fraud detection rate detected!
+          This could indicate an ongoing attack.
+
+          {{ range .Alerts }}
+          Details: {{ .Annotations.description }}
+          {{ end }}
+
+          Immediate Action Required:
+          1. Check fraud detection dashboard
+          2. Review recent transactions
+          3. Consider implementing additional security measures
+
+          Dashboard: http://localhost:3000/d/fraud-detection
+    pagerduty_configs:
+      - routing_key: 'YOUR_PAGERDUTY_INTEGRATION_KEY'
+        description: 'High fraud detection rate - possible attack in progress'
+
+  - name: 'performance-team'
+    email_configs:
+      - to: 'performance@attribution.platform'
+        subject: 'Performance Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Performance issue detected:
+
+          {{ range .Alerts }}
+          Service: {{ .Labels.service }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+          Performance Dashboard: http://localhost:3000/d/ml-performance
+
+  - name: 'infrastructure-team'
+    email_configs:
+      - to: 'infrastructure@attribution.platform'
+        subject: 'Infrastructure Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Infrastructure issue detected:
+
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+inhibit_rules:
+  # Inhibit warning alerts if critical alert is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'service']
+
+  # Inhibit latency alerts if service is down
+  - source_match:
+      alertname: 'MLServiceDown'
+    target_match_re:
+      alertname: 'High.*Latency'
+    equal: ['service']
