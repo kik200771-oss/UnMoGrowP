@@ -1,0 +1,38 @@
+# UnMoGrowP Grafana Dashboard Provisioning Configuration
+# Automatically loads all dashboards from the dashboards directory
+
+apiVersion: 1
+
+providers:
+  - name: 'UnMoGrowP Dashboards'
+    orgId: 1
+    folder: 'UnMoGrowP'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
+
+  - name: 'Performance Monitoring'
+    orgId: 1
+    folder: 'Performance'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
+
+  - name: 'Customer Success'
+    orgId: 1
+    folder: 'Customer Success'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

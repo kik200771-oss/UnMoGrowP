@@ -1,0 +1,16 @@
+name: 🧪 Test Workflow Manual Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_input:
+        description: 'Test input'
+        required: false
+        default: 'hello'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simple test
+        run: echo "Test workflow is working!"
