@@ -1,0 +1,292 @@
+{
+  "dashboard": {
+    "title": "UnMoGrowP - Customer Success Metrics",
+    "description": "Week 1 Sprint: Pilot Customer Success Tracking Dashboard",
+    "tags": ["customer", "success", "pilot", "week1"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Total Pilot Customers",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "total_pilot_customers",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "orientation": "auto",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 3, "color": "yellow"},
+                {"value": 5, "color": "green"}
+              ]
+            },
+            "unit": "none"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Successful Customers",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{
+          "expr": "successful_pilot_customers",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "orientation": "auto",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 2, "color": "yellow"},
+                {"value": 4, "color": "green"}
+              ]
+            },
+            "unit": "none"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": "gauge",
+        "title": "Average Customer Satisfaction",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{
+          "expr": "avg(customer_satisfaction_score)",
+          "refId": "A"
+        }],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 70, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": "gauge",
+        "title": "Week 1 Target Progress",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{
+          "expr": "(total_pilot_customers / 5) * 100",
+          "refId": "A"
+        }],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 60, "color": "yellow"},
+                {"value": 100, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": "timeseries",
+        "title": "Customer Satisfaction Trend",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [{
+          "expr": "customer_satisfaction_score",
+          "legendFormat": "{{company_name}}",
+          "refId": "A"
+        }],
+        "options": {
+          "legend": {"displayMode": "table", "placement": "bottom"},
+          "tooltip": {"mode": "multi"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {"lineWidth": 2, "fillOpacity": 10},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "Attribution Accuracy by Customer",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [{
+          "expr": "attribution_accuracy_percent",
+          "legendFormat": "{{customer_id}}",
+          "refId": "A"
+        }],
+        "options": {
+          "legend": {"displayMode": "table", "placement": "bottom"},
+          "tooltip": {"mode": "multi"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {"lineWidth": 2, "fillOpacity": 10},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 95, "color": "yellow"},
+                {"value": 99, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": "bargauge",
+        "title": "Cost Savings by Customer",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [{
+          "expr": "customer_cost_savings_percent",
+          "legendFormat": "{{customer_id}}",
+          "refId": "A"
+        }],
+        "options": {
+          "displayMode": "gradient",
+          "orientation": "horizontal",
+          "showUnfilled": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 30, "color": "yellow"},
+                {"value": 50, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": "timeseries",
+        "title": "API Latency (P95) by Customer",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [{
+          "expr": "customer_api_latency_ms{percentile=\"p95\"}",
+          "legendFormat": "{{customer_id}}",
+          "refId": "A"
+        }],
+        "options": {
+          "legend": {"displayMode": "table", "placement": "bottom"},
+          "tooltip": {"mode": "multi"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {"lineWidth": 2},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 100, "color": "yellow"},
+                {"value": 200, "color": "red"}
+              ]
+            },
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "type": "table",
+        "title": "Customer Success Summary",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+        "targets": [{
+          "expr": "customer_satisfaction_score",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true, "__name__": true},
+              "indexByName": {},
+              "renameByName": {
+                "customer_id": "Customer ID",
+                "company_name": "Company",
+                "Value": "Satisfaction %"
+              }
+            }
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "Satisfaction %", "desc": true}]
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "customer",
+          "type": "query",
+          "label": "Customer",
+          "query": "label_values(customer_satisfaction_score, customer_id)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "time": {"from": "now-24h", "to": "now"},
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h"]
+    }
+  }
+}
