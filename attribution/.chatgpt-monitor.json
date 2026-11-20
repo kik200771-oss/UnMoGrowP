@@ -1,0 +1,70 @@
+{
+  "project": "UnMoGrowP",
+  "description": "Unified Mobile Growth Platform - AI-Powered Attribution Platform",
+  "default_branch": "feature/migrate-to-svelte",
+  "main_branch": "feature/migrate-to-svelte",
+  "timezone": "Europe/Kyiv",
+  "version": "4.4.0",
+  "reports": {
+    "path": "docs/daily_reports/",
+    "interval": "daily",
+    "schedule": "0 8 * * *",
+    "format": "markdown"
+  },
+  "business_context": {
+    "current_sprint": "Week 4 Enterprise Sprint",
+    "current_metrics": {
+      "customers": 20,
+      "mrr": "$103.4K",
+      "target_customers": "25-28",
+      "target_mrr": "$125K-140K"
+    },
+    "focus_areas": [
+      "Enterprise customer acquisition",
+      "Security hardening",
+      "Performance optimization",
+      "SOC 2 readiness"
+    ]
+  },
+  "monitoring": {
+    "track_commits": true,
+    "track_prs": true,
+    "track_issues": true,
+    "track_files": true,
+    "track_security": true,
+    "track_performance": true,
+    "exclude_patterns": [
+      "*.env*",
+      "*secret*",
+      "*key*",
+      "*token*",
+      "*password*",
+      "node_modules/",
+      ".git/",
+      "*.log"
+    ]
+  },
+  "security": {
+    "sanitize_secrets": true,
+    "exclude_sensitive": true,
+    "log_access": true
+  },
+  "openai": {
+    "model": "gpt-4",
+    "max_tokens": 4000,
+    "temperature": 0.1,
+    "system_prompt": "You are an AI analyst for UnMoGrowP attribution platform. Current status: 20 customers, $103.4K MRR, Week 4 Enterprise Sprint targeting 25-28 customers. Analyze development progress, identify risks, and provide business-focused insights."
+  },
+  "integrations": {
+    "prometheus": {
+      "enabled": false,
+      "endpoint": "http://localhost:9090"
+    },
+    "grafana": {
+      "enabled": false,
+      "endpoint": "http://localhost:3000"
+    }
+  },
+  "created": "2025-10-25",
+  "last_updated": "2025-10-25"
+}
