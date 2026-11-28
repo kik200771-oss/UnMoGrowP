@@ -1,0 +1,31 @@
+# Cloudflare Workers Configuration
+# Edge Computing для глобально распределенного API
+#
+# Deployment: npx wrangler deploy
+# Performance: <10ms latency globally
+
+name = "unmogrowp-edge-api"
+main = "src/index.ts"
+compatibility_date = "2025-10-21"
+
+[env.production]
+name = "unmogrowp-edge-api-prod"
+routes = [
+  { pattern = "api.unmogrowp.com/*", zone_name = "unmogrowp.com" }
+]
+
+# Turso (Edge SQLite) binding
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "unmogrowp-prod"
+database_id = "your-d1-database-id"
+
+# KV для caching
+[[kv_namespaces]]
+binding = "CACHE"
+id = "your-kv-namespace-id"
+
+# Durable Objects для real-time features
+[[durable_objects.bindings]]
+name = "REALTIME"
+class_name = "RealtimeState"

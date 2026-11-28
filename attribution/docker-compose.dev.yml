@@ -1,0 +1,341 @@
+# ============================================================================
+# UnMoGrowP Attribution Platform - Development Environment
+# Complete stack with all services for local development and testing
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ========================================================================
+  # Core Application Services
+  # ========================================================================
+
+  # API Gateway - Main backend service
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/api-gateway/Dockerfile
+    container_name: unmogrowp-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=development
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=9000
+      - CLICKHOUSE_DATABASE=attribution
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - clickhouse
+      - redis
+      - kafka
+    networks:
+      - attribution-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Web UI - Svelte 5 frontend
+  web-ui:
+    build:
+      context: ./apps/web-ui
+      dockerfile: Dockerfile.dev
+    container_name: unmogrowp-web-ui
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080/api/v1
+      - VITE_WS_URL=ws://localhost:8080/ws
+    volumes:
+      - ./apps/web-ui/src:/app/src
+      - ./apps/web-ui/static:/app/static
+    networks:
+      - attribution-network
+    restart: unless-stopped
+    depends_on:
+      - api-gateway
+
+  # ========================================================================
+  # Data Storage Services
+  # ========================================================================
+
+  # ClickHouse - Primary analytics database
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.10
+    container_name: unmogrowp-clickhouse
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native TCP interface
+    environment:
+      CLICKHOUSE_DB: attribution
+      CLICKHOUSE_USER: attribution_user
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./database/clickhouse-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./docker/clickhouse/config.xml:/etc/clickhouse-server/config.d/config.xml
+    networks:
+      - attribution-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "clickhouse", "client", "--query", "SELECT 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - Caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: unmogrowp-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+      - ./docker/redis/redis.conf:/etc/redis/redis.conf
+    networks:
+      - attribution-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL - User data and configuration
+  postgres:
+    image: postgres:15-alpine
+    container_name: unmogrowp-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: attribution_app
+      POSTGRES_USER: attribution_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/rbac-migration.sql:/docker-entrypoint-initdb.d/02-rbac.sql
+    networks:
+      - attribution-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attribution_user -d attribution_app"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================================================
+  # Streaming and Queue Services
+  # ========================================================================
+
+  # Zookeeper - Required for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: unmogrowp-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zk-data:/var/lib/zookeeper/data
+      - zk-logs:/var/lib/zookeeper/log
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # Kafka - Event streaming platform
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: unmogrowp-kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    depends_on:
+      - zookeeper
+    networks:
+      - attribution-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ========================================================================
+  # Monitoring and Observability
+  # ========================================================================
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: unmogrowp-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # Grafana - Metrics visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: unmogrowp-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # Jaeger - Distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.49
+    container_name: unmogrowp-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # ========================================================================
+  # Development Tools
+  # ========================================================================
+
+  # Adminer - Database administration
+  adminer:
+    image: adminer:4.8.1
+    container_name: unmogrowp-adminer
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+      - clickhouse
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # Kafka UI - Kafka administration
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: unmogrowp-kafka-ui
+    ports:
+      - "8082:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    depends_on:
+      - kafka
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # Redis Commander - Redis administration
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: unmogrowp-redis-commander
+    ports:
+      - "8083:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+      - attribution-network
+    restart: unless-stopped
+
+  # ========================================================================
+  # Load Testing and Validation
+  # ========================================================================
+
+  # K6 Load Testing
+  k6:
+    image: grafana/k6:0.46.0
+    container_name: unmogrowp-k6
+    profiles:
+      - testing
+    volumes:
+      - ./testing/load:/scripts
+    command: ["run", "/scripts/attribution-load-test.js"]
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - API_BASE_URL=http://api-gateway:8080
+    networks:
+      - attribution-network
+    depends_on:
+      - api-gateway
+      - prometheus
+
+# ========================================================================
+# Network and Volume Configuration
+# ========================================================================
+
+networks:
+  attribution-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  clickhouse-data:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  kafka-data:
+    driver: local
+  zk-data:
+    driver: local
+  zk-logs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
